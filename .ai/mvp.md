@@ -1,30 +1,44 @@
-# Aplikacja – Obiadex (MVP)
+# Aplikacja - Obiadex (MVP)
 
-### Główny problem
+## Główny problem
 
-Codzienne wymyślanie obiadu zużywa czas i energię. Użytkownicy chcą szybko ułożyć prosty plan obiadów z ulubionych dań – bez skomplikowanych przepisów, zakupów czy logistyki.
+Codzienne wymyślanie „co na obiad?” zużywa czas i energię. Użytkownicy chcą mieć prostą bazę ulubionych obiadów oraz szybki sposób wybierania czegoś „innego niż zwykle” na konkretny dzień, bez rozbudowanej logistyki i planowania.
 
-### Najmniejszy zestaw funkcjonalności
+## Najmniejszy zestaw funkcjonalności
 
-- **Konta użytkowników**: rejestracja, logowanie, usuwanie konta.
-- **Baza dań (tylko obiady)**: dodawanie/edycja/usuwanie z polami `name`, `tags[]`, opcjonalny `recipe_text`, `url`.
-- **AI – generator opisu i tagów**: po wpisaniu nazwy dania jedno kliknięcie uzupełnia krótki opis (2–3 zdania) i 2–3 tagi; użytkownik może je edytować przed zapisem.
-- **Plan obiadów**: generowanie propozycji dla wskazanych dni (pojedynczy dzień lub zakres) z uwzględnieniem opcjonalnej preferencji tagów, ręczna podmiana i usuwanie pozycji.
-- **Historia**: przegląd minionych i nadchodzących obiadów w prostej liście.
+- Konta użytkowników:
+  - rejestracja, logowanie, wylogowanie, usuwanie konta.
 
-### Co NIE wchodzi w zakres MVP
+- Baza dań (tylko obiady):
+  - dodawanie, edycja, usuwanie, lista dań,
+  - pola: `name`, `tags[]` (np. szybkie, makaron, wege), opcjonalne `recipe_text`, opcjonalny `url`.
 
-- Współdzielenie w „rodzinach” i role użytkowników.
-- Import/eksport (CSV, PDF, itp.).
-- Widok kalendarza (grid miesiąca) i drag & drop.
-- Zaawansowany algorytm częstotliwości i gotowanie „na kilka dni”.
-- Model składników, lista zakupów, przeliczanie porcji i kalorii.
-- Publiczne udostępnianie treści, wyszukiwarka publiczna.
-- Powiadomienia, integracje z aplikacjami zewnętrznymi.
+- Historia obiadów / plan:
+  - dla każdego dnia użytkownik może przypisać jedno danie z bazy,
+  - przegląd minionych i nadchodzących dni w prostej liście (np. „2025-11-24 – Spaghetti bolognese”).
+
+- Wybór dania na konkretny dzień:
+  - filtrowanie dań po tagach,
+  - sortowanie listy tak, by:
+    - najpierw pojawiały się dania nigdy niewybrane,
+    - następnie dania użyte dawno temu,
+    - na końcu dania użyte ostatnio,
+
+  - użytkownik ręcznie wybiera danie z listy i zapisuje je w historii.
+
+## Co NIE wchodzi w zakres MVP
+
+- Współdzielenie w ramach „rodzin” i role użytkowników.
+- Import/eksport danych (CSV, PDF, itp.).
+- Widok kalendarza w formie siatki miesiąca oraz drag & drop.
+- Zaawansowane planowanie (np. gotowanie na kilka dni, bilansowanie różnorodności).
+- Model składników, lista zakupów, przeliczanie porcji, kalorii.
+- Publiczne udostępnianie treści i wyszukiwarka publiczna.
+- Powiadomienia oraz integracje z aplikacjami zewnętrznymi.
 - Aplikacje mobilne (na start tylko web).
 
-### Kryteria sukcesu
+## Kryteria sukcesu
 
-- **≥75%** wygenerowanych przez AI opisów/tagów jest akceptowanych bez zmian.
-- **≥70%** pozycji w planie powstaje przez generator (zamiast ręcznie).
-- **Mediana ≥20** dodanych dań na użytkownika w pierwszym tygodniu.
+- Użytkownik ma wypełnione co najmniej 7 dni historii/planów w pierwszym miesiącu korzystania.
+- Mediana ≥20 dań dodanych na użytkownika w pierwszym tygodniu.
+- Co najmniej 60% wyborów dania na dany dzień odbywa się przez wybór z filtrowanej i sortowanej listy (a nie ręczne wpisanie nazwy).
