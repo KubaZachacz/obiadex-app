@@ -70,16 +70,16 @@ build` followed by `npm run preview` to test the production build locally.
 
 ## 5. Available scripts
 
-| Command          | Description                                                  |
-| ---------------- | ------------------------------------------------------------ |
-| `npm run dev`    | Start Astro dev server with hot reload.                      |
-| `npm run build`  | Build the production-ready Astro output.                     |
-| `npm run preview`| Preview the production build locally.                        |
-| `npm run astro`  | Run arbitrary Astro CLI commands.                            |
-| `npm run lint`   | Lint all source files with ESLint.                           |
-| `npm run lint:fix`| Lint and auto-fix supported issues.                         |
-| `npm run format` | Format supported files using Prettier.                       |
-| `npm run supabase`| Access the Supabase CLI (migrations, local dev, etc.).      |
+| Command            | Description                                            |
+| ------------------ | ------------------------------------------------------ |
+| `npm run dev`      | Start Astro dev server with hot reload.                |
+| `npm run build`    | Build the production-ready Astro output.               |
+| `npm run preview`  | Preview the production build locally.                  |
+| `npm run astro`    | Run arbitrary Astro CLI commands.                      |
+| `npm run lint`     | Lint all source files with ESLint.                     |
+| `npm run lint:fix` | Lint and auto-fix supported issues.                    |
+| `npm run format`   | Format supported files using Prettier.                 |
+| `npm run supabase` | Access the Supabase CLI (migrations, local dev, etc.). |
 
 ## 6. Project scope
 
@@ -110,5 +110,3 @@ capture, and UI polish before the initial release.
 
 A license has not been specified yet. Add a LICENSE file prior to public
 distribution to clarify usage rights.
-
-
