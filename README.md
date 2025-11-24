@@ -1,15 +1,13 @@
-## 1. Project name
+# Obiadex
 
-Obiadex
+[![Status: MVP in progress](https://img.shields.io/badge/status-MVP_in_progress-orange)](#7-project-status)
+[![License: TBD](https://img.shields.io/badge/license-TBD-lightgrey)](#8-license)
 
-![Node](https://img.shields.io/badge/node-22.14.0-339933?logo=node.js&logoColor=white)
-![Astro](https://img.shields.io/badge/Astro-5-BC52EE?logo=astro&logoColor=white)
-![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![Tailwind](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
-![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+Obiadex is a focused meal-planning web app that helps individuals and families
+answer “what’s for dinner?” by maintaining a private dish catalog and a simple
+daily planner powered by Supabase and Astro.
 
-### Table of contents
+## Table of Contents
 
 - [1. Project name](#1-project-name)
 - [2. Project description](#2-project-description)
@@ -20,125 +18,97 @@ Obiadex
 - [7. Project status](#7-project-status)
 - [8. License](#8-license)
 
+## 1. Project name
+
+**Obiadex** — a lightweight dinner planning assistant designed for quick,
+repeatable meal decisions.
+
 ## 2. Project description
 
-Obiadex is a simple, mobile‑first PWA that helps you plan dinners from your own dish library. Add dishes (name required, optional description and URL), then use built‑in AI to generate a short description and 2–3 tags. Based on your library, the app proposes dinners for a selected date range while enforcing anti‑repetition rules. A history view lets you browse past and future days, edit, swap, and remove entries. The UI is Polish‑localized with dates in DD.MM.YYYY.
-
-Key highlights:
-
-- Fast frontend with Astro + React and Tailwind
-- Supabase for database and authentication
-- Cost‑efficient AI via OpenRouter (e.g., GPT‑4o‑mini, Gemini Flash)
-- PWA and responsive design
-- Non‑intrusive ads in select views (MVP)
+Obiadex provides a private Supabase-backed workspace where each user can store
+their favorite dishes, tag them, and plan exactly one meal per day using a
+history-aware selector that promotes underused dishes. The MVP emphasizes manual
+control, responsive layouts, and minimal-yet-useful analytics (dish and day
+events). Full functional requirements, user stories, and acceptance criteria are
+captured in the [Product Requirements Document](.ai/prd.md).
 
 ## 3. Tech stack
 
-- Frontend: Astro 5, React 19, TypeScript 5, Tailwind CSS 4, shadcn/ui (Radix)
-- Backend: Supabase (PostgreSQL + Authentication)
-- AI: OpenRouter.ai with cost‑efficient models (e.g., GPT‑4o‑mini, Gemini Flash)
-- CI/CD: GitHub Actions
-- Hosting: Frontend on Vercel/Netlify; backend on Supabase (optional DO + Docker)
-- Localization: Polish UI; dates formatted as DD.MM.YYYY
-- PWA: Installable and mobile‑friendly
-
-Node version: 22.14.0 (see `.nvmrc`)
+- **Framework:** Astro 5 with React 19 islands for interactive flows
+- **Language & styling:** TypeScript 5, Tailwind CSS 4, shadcn/ui + Radix UI
+  primitives, clsx, tailwind-merge, tw-animate-css
+- **Backend-as-a-Service:** Supabase (PostgreSQL, Auth, client SDK 2.x)
+- **Utilities:** class-variance-authority, lucide-react icon set
+- **Tooling:** ESLint 9 (with Astro, React, TypeScript presets), Prettier,
+  husky, lint-staged
+- **Runtime:** Node.js 22.14.0 (see `.nvmrc`)
 
 ## 4. Getting started locally
 
 ### Prerequisites
 
-- Node.js 22.14.0
-- npm
+- Node.js **22.14.0** (use `nvm use` to respect `.nvmrc`)
+- npm 10+ (bundled with Node 22)
+- Supabase project with URL and anon key (for Auth + database access)
 
 ### Setup
 
-1. Clone the repository
-
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/<your-org>/obiadex-app.git
 cd obiadex-app
-```
-
-2. Install dependencies
-
-```bash
 npm install
-```
 
-3. Configure environment variables
+# Configure environment (create .env based on src/env.d.ts expectations)
+cp .env.example .env   # if/when an example file is added
+# Populate Supabase keys, e.g. SUPABASE_URL and SUPABASE_ANON_KEY
 
-Create a `.env` file in the project root with your keys:
-
-```bash
-# Supabase
-SUPABASE_URL=your-supabase-url
-SUPABASE_ANON_KEY=your-supabase-anon-key
-
-# AI provider (OpenRouter)
-OPENROUTER_API_KEY=your-openrouter-api-key
-```
-
-4. Run the development server
-
-```bash
 npm run dev
 ```
 
-5. Build and preview production
-
-```bash
-npm run build
-npm run preview
-```
-
-6. Lint and format (optional)
-
-```bash
-npm run lint
-npm run lint:fix
-npm run format
-```
+The development server runs at `http://localhost:4321` by default. Use `npm run
+build` followed by `npm run preview` to test the production build locally.
 
 ## 5. Available scripts
 
-- `npm run dev`: Start the development server
-- `npm run build`: Build for production
-- `npm run preview`: Preview the production build
-- `npm run lint`: Run ESLint
-- `npm run lint:fix`: Fix ESLint issues
-- `npm run format`: Run Prettier across the repo
-- `npm run astro`: Access Astro CLI directly
+| Command          | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| `npm run dev`    | Start Astro dev server with hot reload.                      |
+| `npm run build`  | Build the production-ready Astro output.                     |
+| `npm run preview`| Preview the production build locally.                        |
+| `npm run astro`  | Run arbitrary Astro CLI commands.                            |
+| `npm run lint`   | Lint all source files with ESLint.                           |
+| `npm run lint:fix`| Lint and auto-fix supported issues.                         |
+| `npm run format` | Format supported files using Prettier.                       |
+| `npm run supabase`| Access the Supabase CLI (migrations, local dev, etc.).      |
 
 ## 6. Project scope
 
-In scope (MVP):
+- **Authentication:** Sign-up, login, logout, optional password reset via
+  Supabase Auth; private data per user with protected routes.
+- **Dish database:** CRUD (minus delete UI) for dishes with fields `name`,
+  `tags[]`, optional `recipe_text` and `url`; validation and case-insensitive tag
+  normalization/removal rules.
+- **Planning UI:** Infinite-scroll day list (past/future), day detail with FAB,
+  manual dish assignment with history-based sorting and optional tag filtering.
+- **Analytics:** `dish_added` (user_id, dish_id, tags_count) and `day_planned`
+  (user_id, date, dish_id) events stored in the database; failures never block
+  UX.
+- **UX guidelines:** Clear empty states, responsive design for desktop/mobile,
+  simple navigation with FAB shortcuts and link to the dish base.
+- **Out of scope for MVP:** Sharing, imports/exports, full calendar grids,
+  ingredient models, notifications, advanced planning automation.
 
-- User accounts: sign up, sign in, sign out, account deletion (Supabase Auth)
-- User’s dish library: name (required), tags (multi‑select), optional description and URL
-- AI assistance: one‑click generation of short description and 2–3 tags (single run per dish in MVP), with throttling and clear error messages
-- Plan generator for a date range with anti‑repetition rules:
-  - A dish appears at most once per week (Mon–Sun)
-  - At least 10 days since the dish last appeared
-  - Can be relaxed with warnings when the pool is too small (e.g., narrow tags)
-- History: chronological list (including empty days) with infinite scroll, filter (with/without dish), and inline edits (swap, add to empty day, remove)
-- Ads: non‑blocking AdSense banners in selected views (e.g., dish list sidebar or sticky on mobile; in history every 7–10 items)
-- PWA & RWD: mobile‑first, responsive UI; Polish language and DD.MM.YYYY
-
-Out of scope (post‑MVP examples):
-
-- Family sharing/roles, public sharing, and external integrations
-- Import/export (CSV/PDF), printing, calendar grid/drag‑and‑drop
-- Advanced frequency modeling and cooking for multiple days
-- Ingredients, shopping lists, calories/portions, advanced analytics
-- Native mobile apps and notifications
-
-For complete requirements, see the PRD at `.ai/prd.md`.
+Refer to `.ai/prd.md` for the exhaustive story-by-story scope definition.
 
 ## 7. Project status
 
-MVP in active development. PRD defined; core flows under implementation. Not production‑ready yet.
+MVP requirements and architecture are documented; implementation is underway and
+not yet production ready. Expect rapid iteration on Supabase schemas, analytics
+capture, and UI polish before the initial release.
 
 ## 8. License
 
-MIT License. See `LICENSE` or the MIT overview at https://opensource.org/licenses/MIT.
+A license has not been specified yet. Add a LICENSE file prior to public
+distribution to clarify usage rights.
+
+
