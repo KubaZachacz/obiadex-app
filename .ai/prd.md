@@ -2,412 +2,343 @@
 
 ## 1. Przegląd produktu
 
-Obiadex to prosta webowa aplikacja PWA pomagająca układać plan obiadów z własnej bazy dań użytkownika. Celem jest szybkie planowanie bez złożonej logistyki: użytkownik dodaje swoje dania (nazwę, opcjonalny opis i URL), a wbudowane AI generuje skrócony opis i 2–3 tagi. Na podstawie bazy dań aplikacja generuje propozycje obiadów dla wybranego zakresu dni, respektując zasady antypowtórzeniowe. Historia pozwala przeglądać przeszłe i przyszłe dni, edytować, podmieniać i usuwać wpisy.
+Obiadex to prosta aplikacja webowa, która pomaga użytkownikom szybko odpowiadać na pytanie „co na obiad?”. Umożliwia stworzenie prywatnej bazy ulubionych dań i ręczne planowanie jednego dania na każdy dzień, z opcjonalnym filtrowaniem po tagach oraz z priorytetyzacją rzadziej wybieranych potraw. Projekt jest celowo uproszczony, przeznaczony na zaliczenie i nie aspiruje do produkcyjnego użycia na tym etapie.
 
-Zakres MVP koncentruje się na:
+Zakres MVP obejmuje:
 
-- rejestracji/logowaniu i usuwaniu konta,
-- zarządzaniu własną bazą dań i tagami,
-- jednorazowej generacji AI opisu i tagów dla dania,
-- generatorze planu obiadów dla zakresu dat z regułami antypowtórzeń,
-- historii obiadów z prostą edycją,
-- prostych reklamach nieblokujących kluczowych flow.
+1. Uwierzytelnianie i konta oparte w całości na Supabase Auth (rejestracja, logowanie, wylogowanie; opcjonalnie reset hasła).
+2. Prywatna baza dań użytkownika z polami: name, tags[], opcjonalne recipe_text i url; edycja dań; brak UI do usuwania.
+3. Historia/plan dni z możliwością przypisania jednego dania do dnia oraz podglądem minionych i nadchodzących dni (infinite scroll w przód i w tył).
+4. Widok „Baza dań” z listą paginowaną, możliwością dodawania i edycji, podstawowym wyszukiwaniem po nazwie oraz filtrowaniem po tagach (multi-select, logika AND).
+5. Prosta nawigacja: po zalogowaniu ekranem startowym jest lista dni; FAB „+” do dodawania dań na liście dni i w widoku dnia; link do widoku „Baza dań”.
+6. Podstawowa responsywność na desktop i mobile.
+7. Minimalna analityka: zliczanie dodanych dań i zaplanowanych dni poprzez proste eventy.
 
-Technologia i hosting:
+Grupa docelowa:
 
-- Frontend: Astro 5 + React 19 + TypeScript 5 + Tailwind 4 + shadcn/ui (RWD, PWA)
-- Backend i baza danych: Supabase (PostgreSQL + Authentication)
-- AI: OpenAI GPT-4o-mini lub Google Gemini Flash (tani model)
-- Hosting: Supabase (backend) + Vercel/Netlify (frontend)
+1. Pracujący single potrzebujący prostego sposobu planowania i różnicowania obiadów bez dużego nakładu czasu.
+2. Rodziny z dziećmi planujące posiłki z wyprzedzeniem (np. tydzień), chcące wybierać dania z własnej, rosnącej bazy (lista zakupów poza MVP).
 
-Monetyzacja (faza testowa):
+Założenia technologiczne i organizacyjne:
 
-- darmowa aplikacja z reklamami (Google AdSense), z potencjalnym pakietem premium do wyłączenia reklam w przyszłości.
-
-Lokalizacja: polski interfejs, format dat DD.MM.YYYY.
+1. Aplikacja webowa, wymagająca zalogowania do korzystania z danych użytkownika.
+2. Brak rozbudowanego zarządzania kontem poza mechanizmami dostarczanymi przez Supabase.
+3. Minimalne wymagania niefunkcjonalne: sensowna responsywność, brak krytycznych błędów, rozsądny czas ładowania.
 
 ## 2. Problem użytkownika
 
-Codzienne wymyślanie obiadu jest czasochłonne i męczące. Użytkownicy chcą szybko ułożyć prosty plan z własnych, lubianych dań, bez skomplikowanych przepisów, list zakupów czy planowania posiłków na wiele dni z góry. Potrzebują narzędzia, które:
+Codzienne decydowanie „co na obiad?” zużywa czas i energię decyzyjną. Użytkownicy chcą mieć:
 
-- uprości katalogowanie ulubionych dań i ich podstawowe otagowanie,
-- pomoże automatycznie wygenerować plan na wybrany zakres dni z minimalnym wysiłkiem,
-- ułatwi korekty i logowanie faktycznie zjedzonych obiadów,
-- zredukuje powtarzalność dań w krótkim okresie.
+1. Prywatną listę sprawdzonych dań, do której łatwo dopisywać nowe pozycje.
+2. Prosty mechanizm wyboru dania na konkretny dzień bez konieczności rozbudowanego planowania.
+3. Możliwość filtrowania po własnych tagach oraz wsparcie w unikaniu ciągłego powtarzania tych samych potraw (priorytetyzacja rzadziej wybieranych).
 
 ## 3. Wymagania funkcjonalne
 
-3.1. Konta użytkowników i bezpieczeństwo
+3.1. Uwierzytelnianie i konta
 
-- Rejestracja i logowanie: e-mail/hasło (Supabase Auth). Opcjonalnie OAuth: Google i Facebook, jeśli dostępne i opłacalne.
-- Wylogowanie i utrzymanie sesji zgodnie z mechanizmami Supabase.
-- Usuwanie konta: trwałe usunięcie wszystkich danych użytkownika (GDPR-compliant).
-- Separacja danych: użytkownik widzi i edytuje wyłącznie własne dane.
+1. Rejestracja, logowanie i wylogowanie w oparciu o Supabase Auth.
+2. Opcjonalnie reset hasła, jeśli dostępny out of the box.
+3. Brak dodatkowego panelu zarządzania kontem (poza mechanizmami Supabase).
+4. Dostęp do aplikacji i danych wyłącznie po zalogowaniu.
+5. Dane są prywatne per użytkownik; użytkownik nie widzi danych innych użytkowników.
 
-  3.2. Baza dań użytkownika
+3.2. Baza dań
 
-- Struktura dania: name (wymagane), tags[] (opcjonalne, multiselect), recipe_text (opcjonalnie krótki opis), url (opcjonalny link do przepisu).
-- Operacje: dodawanie, edycja, usuwanie.
-- Tagowanie: wolny tekst z multiselect autocomplete na bazie tagów użytych wcześniej przez danego użytkownika; możliwość dodania nowego tagu w miejscu.
+1. Pola dania: name (wymagane), tags[] (co najmniej 1 wymagany tag), opcjonalne recipe_text, opcjonalny url.
+2. Dodawanie i edycja dań w tym samym formularzu; zmiana nazwy od razu widoczna wszędzie (np. na liście dni).
+3. Tagi są tworzone przez użytkownika w locie (wpis → zatwierdzenie, np. Enter) i przypisywane do dania.
+4. Nazwy tagów muszą być unikalne w obrębie użytkownika z unikalnością case-insensitive; przy zapisie normalizacja do lowercase.
+5. Usunięcie tagu z komponentu multi-select powoduje usunięcie tagu z systemu użytkownika i odpięcie go od wszystkich jego dań.
+6. Brak UI do usuwania dań w MVP; jeśli danie zostanie usunięte administracyjnie, jest odpinane od dni.
+7. Walidacje pól:
+   a) name: 3–80 znaków,
+   b) tag: 2–30 znaków,
+   c) recipe_text: maks. 2000 znaków,
+   d) url: maks. 255 znaków.
+8. Widok „Baza dań”: lista paginowana (np. 20 pozycji na stronę), wyszukiwanie po nazwie (fragment), filtrowanie po tagach (multi-select, wyniki muszą zawierać wszystkie wybrane tagi).
+9. Pusty stan: jasny komunikat, gdy brak dań.
 
-  3.3. AI – generacja opisu i tagów
+3.3. Historia obiadów / plan dni
 
-- Dostawca: GPT-4o-mini lub Gemini Flash (tanie modele).
-- Trigger: pojedynczy przycisk po wpisaniu nazwy dania (1 generacja na danie w MVP).
-- Wynik: krótki opis (2–3 zdania) i 2–3 tagi (użytkownik może edytować przed zapisem).
-- Ochrona: throttling i anti-spam po stronie API; komunikaty o błędach dla użytkownika; brak wielokrotnej regeneracji w MVP.
+1. Lista dni z infinite scroll w przód i w tył; każdy dzień może mieć przypisane jedno danie lub brak.
+2. Kliknięcie dnia otwiera formularz przypisania dania na ten dzień, z opcjonalnym filtrem po tagu.
+3. Użytkownik ręcznie wybiera danie z listy i zapisuje.
+4. Logika sortowania listy wyboru dania:
+   a) najpierw dania nigdy niewybrane (brak historii użycia),
+   b) następnie dania użyte dawno temu (rosnąco po dacie ostatniego użycia),
+   c) na końcu dania użyte ostatnio (malejąco po dacie ostatniego użycia).
+5. Jeśli baza dań jest pusta, użytkownik widzi informację o konieczności dodania dania.
+6. Zmiana przypisanego dania w dniu nadpisuje poprzedni wybór.
 
-  3.4. Generator planu obiadów
+3.4. Nawigacja i entry pointy
 
-- Interfejs: wybór zakresu dat (od–do), jeden loader na całą generację.
-- Logika:
-  - dni z już przypisanymi pomysłami są pomijane,
-  - opcjonalnie można wskazać oczekiwany tag dla konkretnego dnia w zakresie,
-  - wykorzystanie dania z tagiem wymaga, aby w bazie istniało ≥1 danie z tym tagiem.
-- Zasady antypowtórzeń:
-  - jedno danie maksymalnie raz w tygodniu (pon–ndz),
-  - co najmniej 10 dni karencji od ostatniego wystąpienia dania,
-  - łamanie zasad dopuszczalne przy deficycie dań (szczególnie w wąskich tagach), z informacją ostrzegawczą.
-- Wynik: propozycje zapisane do historii w zakresie dat; możliwość późniejszej edycji pozycji.
+1. Po zalogowaniu ekranem startowym (home) jest lista dni.
+2. Na liście dni:
+   a) widoczny FAB „+” do dodania dania,
+   b) link do widoku „Baza dań”.
+3. W widoku pojedynczego dnia:
+   a) ten sam FAB „+” do dodania nowego dania w trakcie planowania.
 
-  3.5. Historia obiadów
+3.5. Analityka (minimalna)
 
-- Lista chronologiczna ze wszystkimi dniami (w tym puste), z infinite scroll.
-- Filtr: „z daniem” / „bez dania”.
-- Edycje z poziomu historii:
-  - wymiana pomysłu na inne danie z listy,
-  - dodanie pomysłu do pustego dnia,
-  - prośba o nową generację AI dla konkretnego dnia,
-  - usuwanie wpisu (dzień wraca do pustego).
-- Rekomendacja: przed nową generacją zachęta do weryfikacji ostatnich wpisów dla lepszych wyników algorytmu.
+1. Event dish_added z parametrami: user_id, dish_id, tags_count.
+2. Event day_planned z parametrami: user_id, date, dish_id.
+3. Wystarczające jest utrzymanie danych eventów w bazie i prosta agregacja.
 
-  3.6. Reklamy
+3.6. UX i responsywność
 
-- Format: banery AdSense nieblokujące kluczowych działań.
-- Umiejscowienie: sticky banner na dole (mobile) lub sidebar (desktop) w widoku listy dań; w historii co 7–10 pozycji.
-- Zakazy: brak reklam podczas dodawania dania, generowania planu, onboardingu.
+1. Podstawowa responsywność na urządzenia mobilne i desktop.
+2. Prosty, czytelny empty state w miejscach bez danych (brak dań, brak wyników filtrów).
 
-  3.7. PWA i RWD
+3.7. Bezpieczeństwo i prywatność
 
-- Aplikacja mobil-first, działająca jako PWA; responsywne layouty dla głównych widoków.
-
-  3.8. Lokalizacja i formaty
-
-- Język polski; format dat DD.MM.YYYY.
-
-  3.9. Walidacje i komunikaty błędów
-
-- Próba generacji planu bez dań w bazie.
-- Wybór tagu, dla którego brak dań w bazie.
-- Niewystarczająca pula dań do wypełnienia zakresu bez łamania zasad (komunikat ostrzegawczy + możliwe częściowe łamanie zasad).
-- Awaria API AI: komunikat, opcjonalny retry, zachowanie spójności danych.
+1. Dostęp do danych tylko po zalogowaniu.
+2. Dane są izolowane per użytkownik; brak dostępu do cudzych danych.
+3. Brak publicznego udostępniania treści w MVP.
 
 ## 4. Granice produktu
 
-4.1. W zakresie MVP
+Poza zakresem MVP:
 
-- Konta użytkowników: rejestracja, logowanie, usuwanie konta.
-- Baza dań (tylko obiady) z tagami i opcjonalnym opisem/URL.
-- Jednorazowa generacja AI opisu i tagów.
-- Generator planu z zasadami antypowtórzeń i opcjonalnymi preferencjami tagów.
-- Historia z listą dni, filtrem, edycjami i infinite scroll.
-- Reklamy nieinwazyjne w wybranych widokach.
-- PWA, RWD, polska lokalizacja, format DD.MM.YYYY.
+1. Współdzielenie w ramach rodzin i role użytkowników.
+2. Import/eksport danych (CSV, PDF itp.).
+3. Widok kalendarza w siatce miesiąca z drag and drop.
+4. Zaawansowane planowanie (np. gotowanie na kilka dni, różnorodność algorytmiczna).
+5. Model składników, lista zakupów, przeliczanie porcji, kalorii.
+6. Publiczne udostępnianie treści i wyszukiwarka publiczna.
+7. Powiadomienia i integracje zewnętrzne.
+8. Aplikacje mobilne natywne (na start tylko web).
+9. UI do usuwania dań (logika usunięcia istnieje, ale nie ma UI w MVP).
+10. Rozbudowane zarządzanie kontem poza mechanizmami Supabase.
+11. Sformalizowane wymagania niefunkcjonalne poza zdroworozsądkowymi.
 
-  4.2. Poza zakresem MVP
+Założone uproszczenia:
 
-- Współdzielenie w „rodzinach” i role użytkowników.
-- Import/eksport (CSV, PDF), drukowanie.
-- Widok kalendarza (grid miesiąca), drag&drop.
-- Zaawansowany model częstotliwości i gotowanie „na kilka dni”.
-- Składniki, lista zakupów, przeliczanie porcji, kalorii.
-- Publiczne udostępnianie treści, wyszukiwarka publiczna.
-- Powiadomienia, integracje zewnętrzne.
-- Aplikacje mobilne native.
-- Analityka produktowa i zaawansowane statystyki użycia dań.
-
-  4.3. Założenia i ograniczenia
-
-- Koszty AI minimalizowane przez wybór tanich modeli i throttling.
-- Brak limitu liczby dań w wersji darmowej.
-- Iteracyjna generacja odbywa się po stronie backendu; w UI pojedynczy loader.
+1. Minimalna analityka i brak dashboardów.
+2. Brak wielostopniowych ról i uprawnień.
+3. Brak automatycznego planowania; tylko ręczny wybór z listy.
 
 ## 5. Historyjki użytkowników
 
 US-001
-Tytuł: Rejestracja e-mail/hasło
-Opis: Jako nowy użytkownik chcę założyć konto przez e-mail/hasło, aby zacząć korzystać z aplikacji.
+Tytuł: Rejestracja konta
+Opis: Jako nowy użytkownik chcę utworzyć konto, aby korzystać z mojej prywatnej bazy dań i planowania.
 Kryteria akceptacji:
 
-- Formularz przyjmuje poprawny e-mail i silne hasło; walidacje błędów są czytelne.
-- Po rejestracji i weryfikacji (jeśli wymagana) użytkownik jest zalogowany lub przekierowany do logowania.
-- Dane konta tworzą izolowaną przestrzeń danych.
+- Formularz przyjmuje poprawny email i hasło; po wysłaniu konto zostaje utworzone i użytkownik może się zalogować.
+- Dla istniejącego emaila pojawia się czytelny komunikat o błędzie.
+- Niepoprawny email lub zbyt słabe hasło zwracają komunikat walidacyjny.
+- Po rejestracji użytkownik widzi możliwość przejścia do logowania lub jest automatycznie zalogowany, zależnie od konfiguracji Supabase.
 
 US-002
-Tytuł: Logowanie e-mail/hasło
-Opis: Jako zarejestrowany użytkownik chcę się zalogować, aby uzyskać dostęp do swoich danych.
+Tytuł: Logowanie
+Opis: Jako zarejestrowany użytkownik chcę się zalogować, aby uzyskać dostęp do moich danych.
 Kryteria akceptacji:
 
-- Prawidłowe dane logują; błędne dane zwracają komunikat bez ujawniania szczegółów.
-- Sesja jest utrzymywana zgodnie z konfiguracją Supabase.
+- Poprawne dane logowania skutkują zalogowaniem i przejściem do listy dni.
+- Błędne dane logowania zwracają czytelny komunikat o błędzie bez ujawniania szczegółów bezpieczeństwa.
+- Po zalogowaniu dostępne są wyłącznie zasoby użytkownika.
 
 US-003
-Tytuł: Logowanie przez Google
-Opis: Jako użytkownik chcę logować się kontem Google, aby szybciej rozpocząć korzystanie.
+Tytuł: Wylogowanie
+Opis: Jako zalogowany użytkownik chcę móc się wylogować.
 Kryteria akceptacji:
 
-- Logowanie OAuth przez Google działa end-to-end.
-- Przy pierwszym logowaniu tworzone jest konto powiązane z danymi użytkownika.
+- Wylogowanie kończy sesję i usuwa dostęp do zasobów chronionych.
+- Po wylogowaniu próba wejścia w chronione widoki kieruje do logowania.
 
 US-004
-Tytuł: Wylogowanie
-Opis: Jako zalogowany użytkownik chcę się wylogować, aby zakończyć sesję na urządzeniu.
+Tytuł: Reset hasła
+Opis: Jako użytkownik, który zapomniał hasła, chcę je zresetować, jeśli jest to dostępne w Supabase.
 Kryteria akceptacji:
 
-- Kliknięcie „Wyloguj” kończy sesję i przenosi do ekranu logowania.
-
-US-005
-Tytuł: Reset hasła (e-mail)
-Opis: Jako użytkownik, który zapomniał hasła, chcę ustawić nowe hasło przez e-mail.
-Kryteria akceptacji:
-
-- Wysłanie linku resetu na podany e-mail (jeśli konto istnieje) i komunikat o powodzeniu.
-- Ustawienie nowego hasła umożliwia ponowne logowanie.
-
-US-006
-Tytuł: Usunięcie konta i danych
-Opis: Jako użytkownik chcę trwale usunąć konto wraz ze wszystkimi danymi, aby przestać korzystać z usługi.
-Kryteria akceptacji:
-
-- Ekran potwierdzenia informuje o nieodwracalności operacji.
-- Po potwierdzeniu wszystkie dane użytkownika są nieodwracalnie usunięte.
-
-US-007
-Tytuł: Pusty stan po rejestracji
-Opis: Jako nowy użytkownik chcę zobaczyć jasny pusty stan z CTA do dodania pierwszego dania.
-Kryteria akceptacji:
-
-- Widoczny komunikat i przycisk „Dodaj pierwsze danie”.
-
-US-008
-Tytuł: Dodanie dania
-Opis: Jako użytkownik chcę dodać danie z nazwą oraz opcjonalnie opisem i URL.
-Kryteria akceptacji:
-
-- Nazwa jest wymagana; formularz waliduje pola.
-- Zapis powoduje pojawienie się dania w liście.
-
-US-009
-Tytuł: Generacja AI opisu i tagów
-Opis: Jako użytkownik chcę jednym kliknięciem otrzymać opis i tagi na podstawie nazwy dania, aby szybciej uzupełnić dane.
-Kryteria akceptacji:
-
-- Po kliknięciu generacji AI wypełnia 2–3 zdania opisu i 2–3 tagi.
-- Użytkownik może edytować wynik przed zapisem.
-- Throttling błędów jest komunikowany wprost (spróbuj ponownie później).
+- Użytkownik może wysłać żądanie resetu na swój email.
+- Po poprawnym procesie hasło można ustawić ponownie.
+- Błędy procesu resetu wyświetlane są w przyjaznej formie.
 
 US-010
-Tytuł: Edycja dania
-Opis: Jako użytkownik chcę edytować istniejące danie, aby poprawić nazwę, opis, tagi lub URL.
+Tytuł: Dodanie pierwszego dania i tagu
+Opis: Jako nowy użytkownik chcę dodać pierwsze danie z co najmniej jednym nowym tagiem.
 Kryteria akceptacji:
 
-- Zmiany zapisują się i są widoczne w liście i generatorze.
+- Formularz wymaga pola name i co najmniej 1 tagu.
+- Wpisanie nowego tagu i zatwierdzenie tworzy tag i przypisuje go do dania.
+- Po zapisaniu dania licznik analityczny dish_added jest rejestrowany z tags_count.
 
 US-011
-Tytuł: Usunięcie dania
-Opis: Jako użytkownik chcę usunąć danie, którego już nie używam.
+Tytuł: Dodanie dania z wieloma tagami
+Opis: Jako użytkownik chcę dodać danie z kilkoma tagami, tworząc tagi w locie.
 Kryteria akceptacji:
 
-- Potwierdzenie usunięcia; po usunięciu danie znika z listy i nie jest dobierane przez generator.
+- Można dodać kilka tagów, każdy powstaje i przypisuje się po zatwierdzeniu.
+- Jeśli tag o tej samej nazwie (różny case) już istnieje, system wykorzystuje istniejący po normalizacji do lowercase.
 
 US-012
-Tytuł: Zarządzanie tagami inline
-Opis: Jako użytkownik chcę dodawać nowe tagi w polu multiselect i usuwać istniejące z dania.
+Tytuł: Walidacje pól dania
+Opis: Jako użytkownik chcę otrzymywać jasne komunikaty walidacyjne przy błędnych danych dania.
 Kryteria akceptacji:
 
-- Autocomplete podpowiada wcześniej użyte tagi użytkownika.
-- Dodanie nowego tagu jest możliwe bez wychodzenia z formularza.
+- name krótsze niż 3 lub dłuższe niż 80 znaków jest odrzucane z komunikatem.
+- każdy tag krótszy niż 2 lub dłuższy niż 30 znaków jest odrzucany z komunikatem.
+- recipe_text dłuższy niż 2000 znaków jest odrzucany z komunikatem.
+- url dłuższy niż 255 znaków jest odrzucany z komunikatem.
 
 US-013
-Tytuł: Generacja planu dla zakresu dat
-Opis: Jako użytkownik chcę wygenerować propozycje obiadów dla wybranego zakresu dat.
+Tytuł: Unikalność i normalizacja tagów
+Opis: Jako użytkownik chcę, aby tagi były unikalne per konto i normalizowane.
 Kryteria akceptacji:
 
-- Wybór dat od–do jest obowiązkowy i walidowany.
-- Dni z już przypisanymi pomysłami są pomijane.
-- Po zakończeniu generacji wynik pojawia się w historii.
+- tagi są unikalne case-insensitive; próba dodania duplikatu skutkuje użyciem istniejącego lub komunikatem.
+- wszystkie tagi są zapisywane w lowercase niezależnie od wpisanego case.
 
 US-014
-Tytuł: Preferencja tagu dla dnia
-Opis: Jako użytkownik chcę przypisać oczekiwany tag do konkretnego dnia w zakresie (np. „ryba” na piątek).
+Tytuł: Usunięcie tagu z systemu użytkownika
+Opis: Jako użytkownik chcę usunąć tag poprzez zdjęcie go z komponentu multi-select.
 Kryteria akceptacji:
 
-- Generator dobiera danie z wymaganym tagiem, jeśli istnieje w bazie.
-- Jeśli brak dania z tagiem, użytkownik otrzymuje jasny komunikat przed uruchomieniem generacji.
+- zdjęcie tagu z dania skutkuje jego usunięciem z systemu użytkownika,
+- tag zostaje automatycznie odpięty od innych dań użytkownika,
+- brak błędów dla dań, które traciły tag.
 
 US-015
-Tytuł: Pomijanie dni już zaplanowanych
-Opis: Jako użytkownik nie chcę nadpisań istniejących wpisów w historii podczas generacji.
+Tytuł: Edycja dania
+Opis: Jako użytkownik chcę edytować nazwę, tagi i pola opcjonalne dania.
 Kryteria akceptacji:
 
-- Dni z istniejącym wpisem pozostają bez zmian; są wyłączone z generacji.
+- edycja wykorzystuje ten sam formularz co dodawanie,
+- zmiana nazwy jest od razu widoczna na liście dni i w innych miejscach,
+- walidacje pól działają identycznie jak przy dodawaniu.
 
 US-016
-Tytuł: Zasady antypowtórzeń i ich łamanie przy deficycie
-Opis: Jako użytkownik chcę, aby generator nie powtarzał dania częściej niż raz w tygodniu i zachowywał 10 dni karencji, chyba że brakuje opcji.
+Tytuł: Lista dań z paginacją, wyszukiwaniem i filtrami
+Opis: Jako użytkownik chcę przeglądać listę wszystkich moich dań i szybko znaleźć potrzebne.
 Kryteria akceptacji:
 
-- Standardowo spełnione: 1×/tydzień oraz ≥10 dni karencji.
-- Przy deficycie generator może złamać zasady, ale wyświetla ostrzeżenie.
+- lista jest paginowana (np. 20 pozycji na stronę) z możliwością przewijania stron,
+- wyszukiwanie po fragmencie nazwy zawęża wyniki,
+- filtr po tagach (multi-select) zwraca dania posiadające wszystkie wybrane tagi (logika AND),
+- puste wyniki prezentują czytelny komunikat.
 
 US-017
-Tytuł: Ręczna podmiana dania w planie
-Opis: Jako użytkownik chcę ręcznie zamienić zaproponowane danie na inne z mojej bazy.
+Tytuł: Pusty stan bazy dań
+Opis: Jako użytkownik bez dań chcę zobaczyć jasny komunikat i CTA do dodania dania.
 Kryteria akceptacji:
 
-- Dropdown z listą dań pozwala na wybór zastępnika.
-- Zmiana zapisuje się w historii.
-
-US-018
-Tytuł: Usunięcie pozycji z dnia
-Opis: Jako użytkownik chcę usunąć przypisane danie z konkretnego dnia.
-Kryteria akceptacji:
-
-- Po usunięciu dzień staje się pusty.
-
-US-019
-Tytuł: Historia z filtrem i infinite scroll
-Opis: Jako użytkownik chcę przeglądać historię wszystkich dni z opcjonalnym filtrem i płynnym ładowaniem.
-Kryteria akceptacji:
-
-- Lista obejmuje puste i wypełnione dni.
-- Filtr „z daniem”/„bez dania” działa poprawnie.
-- Infinite scroll doładowuje kolejne porcje.
+- widok „Baza dań” pokazuje komunikat, gdy brak pozycji,
+- dostępny jest FAB „+” do szybkiego dodania pierwszego dania.
 
 US-020
-Tytuł: Korekta przeszłego wpisu
-Opis: Jako użytkownik chcę skorygować przeszłe danie na to faktycznie ugotowane.
+Tytuł: Ekran startowy lista dni (infinite scroll)
+Opis: Jako zalogowany użytkownik chcę przeglądać dni w przód i w tył bez ograniczeń kalendarzowych.
 Kryteria akceptacji:
 
-- Edycja w historii umożliwia wybranie innego dania z bazy i zapis.
+- po zalogowaniu wyświetla się lista dni jako home,
+- infinite scroll ładuje kolejne porcje dni zarówno w przód, jak i wstecz,
+- każdy dzień prezentuje datę i ewentualnie przypisane danie.
 
 US-021
-Tytuł: Dodanie dania do pustego dnia
-Opis: Jako użytkownik chcę ręcznie dodać danie do pustego dnia z historii.
+Tytuł: Otwarcie dnia i filtrowanie po tagu
+Opis: Jako użytkownik chcę otworzyć wybrany dzień i zawęzić listę dań po tagach.
 Kryteria akceptacji:
 
-- Formularz dodania z listą dań zapisuje wpis.
+- otwarcie dnia pokazuje listę dań z opcjonalnym filtrem po tagu,
+- zastosowanie filtra ogranicza listę do dań posiadających wybrane tagi,
+- puste wyniki mają czytelny komunikat.
 
 US-022
-Tytuł: Regeneracja propozycji AI dla dnia
-Opis: Jako użytkownik chcę poprosić o nową propozycję AI dla konkretnego dnia.
+Tytuł: Przypisanie dania do dnia
+Opis: Jako użytkownik chcę ręcznie wybrać jedno danie i zapisać je dla dnia.
 Kryteria akceptacji:
 
-- Po wywołaniu AI proponuje nowe danie z mojej bazy (respektując zasady jak możliwe).
-- W razie błędu AI pojawia się komunikat i możliwość ponowienia.
+- zapis powoduje widoczność wyboru na liście dni,
+- event day_planned zostaje zarejestrowany z parametrami user_id, date, dish_id,
+- zapis można wykonać tylko, gdy w bazie istnieją dania.
 
 US-023
-Tytuł: Przypomnienie o weryfikacji przed generacją
-Opis: Jako użytkownik chcę zostać zachęcony do weryfikacji ostatnich wpisów przed kolejną generacją.
+Tytuł: Pusty stan dnia bez dań w bazie
+Opis: Jako użytkownik bez dań w bazie chcę wiedzieć, że muszę najpierw dodać danie.
 Kryteria akceptacji:
 
-- Przed startem generacji pojawia się nienachalny komunikat rekomendujący weryfikację historii.
+- po kliknięciu dnia bez istniejących dań wyświetla się komunikat informujący o konieczności dodania dania,
+- dostępny jest FAB „+” do szybkiego dodania.
 
 US-024
-Tytuł: Obsługa błędów AI
-Opis: Jako użytkownik chcę jasnych komunikatów, gdy AI nie działa lub limit został przekroczony.
+Tytuł: Sortowanie listy wyboru dania według historii użycia
+Opis: Jako użytkownik chcę, aby lista wyboru promowała dania rzadziej wybierane.
 Kryteria akceptacji:
 
-- Komunikaty rozróżniają błąd chwilowy, limit i inne problemy.
-- UI nie pozostaje w stanie zawieszenia; można ponowić akcję lub wrócić.
+- dania nigdy niewybrane są na górze listy,
+- następnie dania sortowane rosnąco po dacie ostatniego użycia,
+- najniżej znajdują się dania użyte ostatnio (najbardziej świeża data),
+- dla jednakowej daty użycia obowiązuje stabilne sortowanie alfabetyczne po name.
 
 US-025
-Tytuł: Reklamy nieinwazyjne
-Opis: Jako użytkownik chcę, aby reklamy nie przeszkadzały w kluczowych działaniach.
+Tytuł: Zmiana przypisanego dania
+Opis: Jako użytkownik chcę móc zmienić danie przypisane do dnia.
 Kryteria akceptacji:
 
-- Reklamy pojawiają się w liście dań i historii (co 7–10 pozycji).
-- Brak reklam podczas dodawania dania, generacji planu i onboardingu.
+- ponowny zapis nadpisuje poprzedni wybór,
+- lista dni od razu prezentuje zaktualizowaną nazwę dania.
 
 US-026
-Tytuł: PWA i RWD
-Opis: Jako użytkownik mobilny chcę wygodnie korzystać z aplikacji na telefonie oraz opcjonalnie zainstalować PWA.
+Tytuł: Zachowanie po administracyjnym usunięciu dania
+Opis: Jako użytkownik chcę, aby po usunięciu dania poza UI historia nie pokazywała już tej pozycji.
 Kryteria akceptacji:
 
-- Widoki są responsywne; PWA przechodzi podstawowe checki instalowalności.
+- po usunięciu dania jest ono odpinane od wszystkich dni użytkownika,
+- w historii nie widać pustych placeholderów ani błędów.
 
 US-027
-Tytuł: Lokalizacja i format dat
-Opis: Jako użytkownik w Polsce chcę interfejsu po polsku i dat w formacie DD.MM.YYYY.
+Tytuł: FAB „+” na liście dni i w widoku dnia
+Opis: Jako użytkownik chcę mieć szybki dostęp do dodawania dania.
 Kryteria akceptacji:
 
-- Cały UI jest po polsku; daty wyświetlane jako DD.MM.YYYY.
+- FAB jest widoczny i dostępny na liście dni i w widoku dnia,
+- kliknięcie otwiera formularz dodawania dania.
 
 US-028
-Tytuł: Throttling i informowanie użytkownika
-Opis: Jako użytkownik chcę jasnych informacji, gdy osiągam limity wywołań AI.
+Tytuł: Rejestrowanie eventów analitycznych
+Opis: Jako właściciel produktu chcę zliczać dodane dania i zaplanowane dni.
 Kryteria akceptacji:
 
-- W razie przekroczenia limitu UI informuje o czasie oczekiwania lub próbie później.
+- zapis dania emituje event dish_added z tags_count,
+- przypisanie dania do dnia emituje event day_planned z date,
+- błędy zapisu eventów nie blokują akcji użytkownika.
 
 US-029
-Tytuł: Izolacja danych i autoryzacja
-Opis: Jako użytkownik chcę mieć pewność, że nikt poza mną nie zobaczy moich dań i historii.
+Tytuł: Izolacja danych użytkownika
+Opis: Jako użytkownik chcę mieć pewność, że nikt nie zobaczy moich danych.
 Kryteria akceptacji:
 
-- Zapytania i operacje zwracają wyłącznie rekordy danego użytkownika.
-- Próby dostępu do cudzych zasobów są odrzucane.
+- zapytania i widoki zwracają wyłącznie dane zalogowanego użytkownika,
+- próba dostępu do cudzych zasobów kończy się błędem/odmową.
 
 US-030
-Tytuł: Responsywność widoków kluczowych
-Opis: Jako użytkownik chcę wygodnej obsługi listy dań, generatora i historii na różnych rozmiarach ekranu.
+Tytuł: Ochrona tras i dostęp tylko po zalogowaniu
+Opis: Jako niezalogowany użytkownik nie powinienem widzieć zasobów prywatnych.
 Kryteria akceptacji:
 
-- Brak poziomego scrolla; elementy kluczowe są dostępne i czytelne.
+- wejście na chronione widoki wymaga zalogowania,
+- niezalogowany użytkownik jest kierowany do ekranu logowania.
 
 US-031
-Tytuł: Walidacja „brak dań w bazie”
-Opis: Jako użytkownik chcę jasnego komunikatu, gdy próbuję generować plan bez dań w bazie.
+Tytuł: Responsywność interfejsu
+Opis: Jako użytkownik mobilny chcę wygodnie korzystać z aplikacji.
 Kryteria akceptacji:
 
-- Przycisk generacji jest zablokowany lub pojawia się komunikat z linkiem/CTA do dodania dań.
-
-US-032
-Tytuł: Walidacja „brak dań dla tagu”
-Opis: Jako użytkownik chcę wiedzieć, że wybrany tag nie ma przypisanych dań.
-Kryteria akceptacji:
-
-- UI informuje o braku dań z tagiem i nie pozwala wystartować generacji z tym wymogiem.
-
-US-033
-Tytuł: Ostrzeżenie „niewystarczająca pula dań”
-Opis: Jako użytkownik chcę ostrzeżenia, gdy zakres dat może wymusić złamanie zasad antypowtórzeń.
-Kryteria akceptacji:
-
-- Przed startem generacji widoczny jest komunikat, że system może powtórzyć dania wcześniej.
-
-US-034
-Tytuł: Loader generacji planu
-Opis: Jako użytkownik chcę widzieć pojedynczy loader na czas całej generacji, aby rozumieć postęp.
-Kryteria akceptacji:
-
-- W trakcie generacji widoczny jest jeden spójny loader; po zakończeniu znika i pojawia się wynik w historii.
-
-US-035
-Tytuł: Logowanie przez Facebook (opcjonalne)
-Opis: Jako użytkownik chcę mieć możliwość logowania przez Facebook, jeśli dostępne.
-Kryteria akceptacji:
-
-- OAuth Facebook działa analogicznie do Google; w razie braku konfiguracji funkcja jest ukryta.
+- kluczowe widoki (lista dni, dzień, baza dań, formularze) skalują się poprawnie na typowych szerokościach mobilnych i desktopowych,
+- elementy interfejsu nie nachodzą na siebie, a akcje są łatwo dostępne.
 
 ## 6. Metryki sukcesu
 
-- ≥75% wygenerowanych przez AI opisów i tagów akceptowanych bez zmian w formularzu dania.
-- ≥70% pozycji w planie generowanych przez algorytm zamiast ręcznie.
-- Mediana ≥20 dodanych dań na użytkownika w pierwszym tygodniu od rejestracji.
-
-Checklist weryfikacyjny PRD
-
-- Każda historyjka użytkownika jest testowalna i ma jasne kryteria akceptacji.
-- Ujęto wystarczający zestaw historyjek do zbudowania w pełni funkcjonalnego MVP (auth, baza dań, AI, generator, historia, reklamy, PWA, walidacje, bezpieczeństwo).
-- Uwzględniono wymagania dotyczące uwierzytelniania i autoryzacji.
+1. Użytkownik ma wypełnione co najmniej 7 dni historii/planów w pierwszym miesiącu korzystania.
+2. Mediana co najmniej 20 dań dodanych na użytkownika w pierwszym tygodniu.
+3. Minimalne eventy i sposób mierzenia:
+   a) dish_added (user_id, dish_id, tags_count),
+   b) day_planned (user_id, date, dish_id),
+   c) możliwość prostego zliczania tych eventów zapytaniami.
+4. Dodatkowe sygnały jakościowe (opcjonalne):
+   a) odsetek użytkowników, którzy dodali co najmniej 1 danie w pierwszej sesji,
+   b) czas do dodania pierwszego dania po rejestracji,
+   c) liczba sesji, w których zaplanowano co najmniej 1 dzień.

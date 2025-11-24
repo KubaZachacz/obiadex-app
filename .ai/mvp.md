@@ -41,4 +41,3 @@ Codzienne wymyślanie „co na obiad?” zużywa czas i energię. Użytkownicy c
 
 - Użytkownik ma wypełnione co najmniej 7 dni historii/planów w pierwszym miesiącu korzystania.
 - Mediana ≥20 dań dodanych na użytkownika w pierwszym tygodniu.
-- Co najmniej 60% wyborów dania na dany dzień odbywa się przez wybór z filtrowanej i sortowanej listy (a nie ręczne wpisanie nazwy).
