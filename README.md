@@ -110,3 +110,4 @@ capture, and UI polish before the initial release.
 
 A license has not been specified yet. Add a LICENSE file prior to public
 distribution to clarify usage rights.
+

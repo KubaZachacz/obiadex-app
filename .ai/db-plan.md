@@ -90,3 +90,4 @@ RLS włączone na wszystkich tabelach należących do użytkownika (`ALTER TABLE
 - `payload` w `events` przechowuje minimalne dane (`dish_id`, `tags_count`, `date`), przy czym błędy zapisu eventu nie blokują operacji użytkownika.
 - Wyszukiwanie po nazwie oraz filtrowanie po wielu tagach powinno zawsze zawierać warunki `user_id`, aby wykorzystać indeksy.
 - UI generuje „puste” dni – tabela `day_plans` przechowuje wyłącznie dni z przypisanym daniem; usunięcie dania automatycznie czyści powiązane dni dzięki `ON DELETE CASCADE`.
+

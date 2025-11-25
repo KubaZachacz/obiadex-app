@@ -25,10 +25,10 @@ type TagSelection =
       tagIds: NonEmptyArray<TagRow["id"]>;
     };
 
-export type Paginated<TItem> = {
+export interface Paginated<TItem> {
   data: TItem[];
   nextCursor: string | null;
-};
+}
 
 // AUTH
 export interface AuthSignupCommand {
@@ -201,4 +201,3 @@ export interface AnalyticsSummaryDTO {
   dishAdded: { count: number };
   dayPlanned: { count: number };
 }
-
