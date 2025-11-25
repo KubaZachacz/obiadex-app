@@ -57,11 +57,14 @@ Codzienne decydowanie „co na obiad?” zużywa czas i energię decyzyjną. Uż
    c) recipe_text: maks. 2000 znaków,
    d) url: maks. 255 znaków.
 8. Widok „Baza dań”: lista paginowana (np. 20 pozycji na stronę), wyszukiwanie po nazwie (fragment), filtrowanie po tagach (multi-select, wyniki muszą zawierać wszystkie wybrane tagi).
+   - Prosta, stronicowana paginacja (`page`, `pageSize`)
 9. Pusty stan: jasny komunikat, gdy brak dań.
 
 3.3. Historia obiadów / plan dni
 
 1. Lista dni z infinite scroll w przód i w tył; każdy dzień może mieć przypisane jedno danie lub brak.
+   - UI oblicza zakres dat (np. 14 dni wstecz i 14 dni wprzód od aktualnie widocznego dnia) i pyta API o pełną listę dni w tym oknie.
+   - Po przewinięciu ekran ustala nowy `start`/`end` i ponawia zapytanie; backend zwraca wszystkie rekordy mieszczące się w zakresie bez kursorów.
 2. Kliknięcie dnia otwiera formularz przypisania dania na ten dzień, z opcjonalnym filtrem po tagu.
 3. Użytkownik ręcznie wybiera danie z listy i zapisuje.
 4. Logika sortowania listy wyboru dania:

@@ -31,7 +31,7 @@ Notes:
 Conventions:
 
 - All timestamps are ISO 8601. `day` uses calendar date `YYYY-MM-DD`.
-- Cursor pagination where practical; otherwise `page`/`limit` available.
+- Lists default to `page`/`pageSize` pagination unless noted (day plans rely on explicit `start`/`end` ranges; tags always return the full set without paging).
 - Standard error body:
 
 ```json
@@ -128,9 +128,8 @@ Entity rules:
 - GET /dishes
   - Description: List dishes with pagination, search (fragment), AND-tag filtering, optional usage-prioritized sort.
   - Query:
-    - `cursor`: string (opaque, server-issued; keyset by `(created_at, id)`)
-    - `limit`: int (default 20, max 100)
-    - `page`: int (fallback if no cursor)
+    - `page`: int (>=1, default 1)
+    - `pageSize`: int (default 20, max 100)
     - `q`: string (fragment; uses trigram if available)
     - `tagId`: uuid[] (repeatable; AND across all provided)
     - `sort`: `created_desc` (default) | `name_asc` | `usage_prio`
@@ -149,11 +148,14 @@ Entity rules:
           "lastUsedDay": "YYYY-MM-DD|null" // present if sort=usage_prio
         }
       ],
-      "nextCursor": "string|null"
+      "page": 1,
+      "pageSize": 20,
+      "total": 120,
+      "totalPages": 6
     }
     ```
   - Success: 200 OK
-  - Errors: 400 invalid cursor, 422 invalid filters.
+  - Errors: 400 invalid page/pageSize, 422 invalid filters.
   - Sorting `usage_prio`: Never-used first (NULLs first), then by `lastUsedDay` ascending, then `name` ASC.
 
 - GET /dishes/{id}
@@ -210,19 +212,16 @@ Entity rules:
 - GET /tags
   - Description: List all tags for the current user.
   - Query:
-    - `q`: string (fragment on `name`, case-insensitive)
-    - `limit`: int (default 50, max 200)
-    - `cursor` or `page`: pagination
-    - `includeCounts`: boolean (default false) — include number of dishes per tag
+    - `includeCounts`: boolean (default false) — include number of dishes per tag (adds `dishCount` field per entry)
   - Response JSON (200):
     ```json
     {
-      "data": [{ "id": "uuid", "name": "string", "dishCount": 12 }],
-      "nextCursor": "string|null"
+      "data": [{ "id": "uuid", "name": "string", "dishCount": 12 }]
     }
     ```
   - Success: 200 OK
-  - Errors: 400 invalid cursor.
+  - Notes: Always returns the full tag list (no pagination or server-side sorting).
+    - `dishCount` is omitted when `includeCounts=false`.
 
 - POST /tags
   - Description: Create one tag or bulk upsert by names.
@@ -261,10 +260,11 @@ Entity rules:
 - Unique per `(user_id, day)`; each stored only if a dish is assigned (UI renders empty days client-side).
 
 - GET /day-plans
-  - Description: List scheduled days within a range or via cursors (server stores only planned days).
-  - Query (one of the modes):
-    - Range: `start=YYYY-MM-DD`, `end=YYYY-MM-DD`, `sort=asc|desc` (default desc)
-    - Cursor: `cursor=YYYY-MM-DD`, `dir=back|forward` (default back), `limit` (default 30, max 90)
+  - Description: List scheduled days within a required date range (server stores only planned days).
+  - Query:
+    - `start=YYYY-MM-DD` (required, inclusive lower bound)
+    - `end=YYYY-MM-DD` (required, inclusive upper bound, must be ≥ `start`)
+    - `sort=asc|desc` (optional, default `asc`)
   - Response JSON (200):
     ```json
     {
@@ -275,11 +275,12 @@ Entity rules:
           "dish": { "id": "uuid", "name": "string" } // minimal projection
         }
       ],
-      "nextCursor": "YYYY-MM-DD|null"
+      "range": { "start": "YYYY-MM-DD", "end": "YYYY-MM-DD" }
     }
     ```
   - Success: 200 OK
-  - Errors: 422 invalid date/range.
+  - Errors: 422 invalid date/range (including windows longer than 180 days).
+  - Notes: UI typically asks for rolling windows (e.g., 14 days back/forward) and reissues the query with new bounds when the viewport changes.
 
 - GET /day-plans/{day}
   - Description: Fetch a single day plan by date.
