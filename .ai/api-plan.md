@@ -1,7 +1,7 @@
 # REST API Plan
 
 Version: v1
-Base URL: `/api/v1`
+Base URL: `/api`
 Content type: `application/json; charset=utf-8`
 Auth: `Authorization: Bearer <Supabase JWT>` (required on all endpoints except signup/login/reset if proxied)
 
@@ -412,7 +412,7 @@ Pagination strategies:
 
 Implementation notes (Astro + Supabase):
 
-- Place handlers under `src/pages/api/v1/**`. Use server-side Supabase client with service role (if needed) or user JWT; prefer user JWT and RLS for safety.
+- Place handlers under `src/pages/api/**`. Use server-side Supabase client with service role (if needed) or user JWT; prefer user JWT and RLS for safety.
 - For multi-step operations (e.g., create dish with tags + links + event), wrap in a Postgres function called via `rpc()` to guarantee transactional integrity and minimize roundtrips; or use `pg-transaction` support if available.
 - Normalize tag names strictly on the server; never trust client case.
 - Do not accept or echo `user_id` fields; always infer from JWT.
