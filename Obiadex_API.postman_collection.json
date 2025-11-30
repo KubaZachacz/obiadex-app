@@ -1,0 +1,855 @@
+{
+  "info": {
+    "name": "Obiadex API",
+    "description": "Complete API collection for Obiadex MVP - meal planning application with tags, dishes, day plans, analytics, and authentication.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "obiadex-api-v1"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set content-type for requests with body",
+          "if (pm.request.body && pm.request.body.mode === 'raw') {",
+          "    pm.request.headers.add({",
+          "        key: 'Content-Type',",
+          "        value: 'application/json'",
+          "    });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has userId and email\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('userId');",
+                  "    pm.expect(json).to.have.property('email');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"SecurePass123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "signup"]
+            },
+            "description": "Create a new user account. Returns userId and email on success (201). Returns 409 if email already exists."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access token\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('accessToken');",
+                  "    pm.expect(json).to.have.property('expiresInSec');",
+                  "    ",
+                  "    // Auto-save token to environment",
+                  "    pm.environment.set('access_token', json.accessToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"SecurePass123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Authenticate user and get access token. Returns accessToken and expiresInSec on success (200). Returns 401 for invalid credentials. Token is automatically saved to environment variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204\", () => {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "",
+                  "// Clear token from environment",
+                  "pm.environment.unset('access_token');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Terminate current user session. Returns 204 on success. Requires authentication."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 202\", () => {",
+                  "    pm.response.to.have.status(202);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "reset-password"]
+            },
+            "description": "Send password reset email. Always returns 202 to prevent email enumeration (whether email exists or not)."
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints for user signup, login, logout, and password reset."
+    },
+    {
+      "name": "Tags",
+      "item": [
+        {
+          "name": "List Tags",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has data array\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tags?includeCounts=true",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags"],
+              "query": [
+                {
+                  "key": "includeCounts",
+                  "value": "true",
+                  "description": "Include dish count for each tag"
+                }
+              ]
+            },
+            "description": "List all user tags. Optional query param 'includeCounts' adds dishCount to each tag."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Single Tag",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has tag properties\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('name');",
+                  "    pm.expect(json).to.have.property('createdAt');",
+                  "    ",
+                  "    // Save tag ID for later use",
+                  "    pm.environment.set('tag_id', json.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Breakfast\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tags",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags"]
+            },
+            "description": "Create a single tag. Tag name is normalized (lowercase, trimmed). Returns 201 on success, 409 if tag already exists."
+          },
+          "response": []
+        },
+        {
+          "name": "Bulk Upsert Tags",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has tags array\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('tags');",
+                  "    pm.expect(json.tags).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"names\": [\"italian\", \"pasta\", \"dinner\", \"quick\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tags",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags"]
+            },
+            "description": "Create or update multiple tags in one request. Uses upsert logic (creates if new, updates if exists). Maximum 50 tags per request."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Tag",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204\", () => {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/tags/{{tag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tags", "{{tag_id}}"]
+            },
+            "description": "Delete a tag by ID. Returns 204 on success, 404 if tag not found. Also removes all dish_tags associations."
+          },
+          "response": []
+        }
+      ],
+      "description": "Tag management endpoints for creating, listing, and deleting user tags."
+    },
+    {
+      "name": "Dishes",
+      "item": [
+        {
+          "name": "List Dishes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has pagination\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('page');",
+                  "    pm.expect(json).to.have.property('pageSize');",
+                  "    pm.expect(json).to.have.property('total');",
+                  "    pm.expect(json).to.have.property('totalPages');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dishes?page=1&pageSize=20&sort=created_desc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dishes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (min: 1)"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "description": "Items per page (1-100, default: 20)"
+                },
+                {
+                  "key": "q",
+                  "value": "pasta",
+                  "description": "Text search across name, recipe, url",
+                  "disabled": true
+                },
+                {
+                  "key": "tagId",
+                  "value": "{{tag_id}}",
+                  "description": "Filter by tag ID (can specify multiple)",
+                  "disabled": true
+                },
+                {
+                  "key": "sort",
+                  "value": "created_desc",
+                  "description": "Sort mode: created_desc, name_asc, usage_prio"
+                }
+              ]
+            },
+            "description": "List dishes with pagination, filtering, and sorting. Supports text search, tag filtering (AND logic for multiple tags), and three sort modes."
+          },
+          "response": []
+        },
+        {
+          "name": "List Dishes - Filtered by Tags",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"All dishes have specified tags\", () => {",
+                  "    const json = pm.response.json();",
+                  "    json.data.forEach(dish => {",
+                  "        pm.expect(dish.tags).to.be.an('array');",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dishes?tagId={{tag_id}}&tagId=another-tag-id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dishes"],
+              "query": [
+                {
+                  "key": "tagId",
+                  "value": "{{tag_id}}"
+                },
+                {
+                  "key": "tagId",
+                  "value": "another-tag-id"
+                }
+              ]
+            },
+            "description": "Example: Filter dishes by multiple tags using AND logic (dish must have ALL specified tags)."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Dish",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", () => {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has dish with tags\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('name');",
+                  "    pm.expect(json).to.have.property('tags');",
+                  "    pm.expect(json.tags).to.be.an('array');",
+                  "    ",
+                  "    // Save dish ID for later use",
+                  "    pm.environment.set('dish_id', json.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Spaghetti Carbonara\",\n  \"recipeText\": \"Classic Italian pasta with eggs, cheese, and pancetta. Cook pasta, mix with egg-cheese mixture, add crispy pancetta.\",\n  \"url\": \"https://example.com/carbonara-recipe\",\n  \"tagSelection\": {\n    \"tagNames\": [\"italian\", \"pasta\", \"dinner\"]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dishes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dishes"]
+            },
+            "description": "Create a new dish with tags. TagSelection can use tagNames (creates if needed) or tagIds (must exist). At least one tag required."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dish",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has complete dish data\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('name');",
+                  "    pm.expect(json).to.have.property('tags');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dishes/{{dish_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dishes", "{{dish_id}}"]
+            },
+            "description": "Get a single dish by ID with all associated tags. Returns 404 if not found or doesn't belong to user."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Dish",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has updated dish\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('updatedAt');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipeText\": \"Updated recipe with more detailed instructions.\",\n  \"tagSelection\": {\n    \"tagNames\": [\"italian\", \"pasta\", \"dinner\", \"comfort-food\"]\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/dishes/{{dish_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dishes", "{{dish_id}}"]
+            },
+            "description": "Partial update of dish. All fields optional. If tagSelection provided, completely replaces tags."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Dish",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204\", () => {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/dishes/{{dish_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dishes", "{{dish_id}}"]
+            },
+            "description": "Delete a dish by ID. Returns 204 on success, 404 if not found. Also removes all associated dish_tags and day_plans."
+          },
+          "response": []
+        }
+      ],
+      "description": "Dish management endpoints with advanced filtering, pagination, and tag support."
+    },
+    {
+      "name": "Day Plans",
+      "item": [
+        {
+          "name": "Get Date Range",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has data and range\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('data');",
+                  "    pm.expect(json).to.have.property('range');",
+                  "    pm.expect(json.range).to.have.property('start');",
+                  "    pm.expect(json.range).to.have.property('end');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/day-plans?start=2025-01-15&end=2025-01-31&sort=asc",
+              "host": ["{{base_url}}"],
+              "path": ["api", "day-plans"],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2025-01-15",
+                  "description": "Start date (YYYY-MM-DD)"
+                },
+                {
+                  "key": "end",
+                  "value": "2025-01-31",
+                  "description": "End date (YYYY-MM-DD)"
+                },
+                {
+                  "key": "sort",
+                  "value": "asc",
+                  "description": "Sort order: asc or desc"
+                }
+              ]
+            },
+            "description": "Get all day plans for a date range. Maximum 180 days. Returns array of day plans with dish info."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Day",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 404\", () => {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Response has day plan with dish\", () => {",
+                  "        const json = pm.response.json();",
+                  "        pm.expect(json).to.have.property('id');",
+                  "        pm.expect(json).to.have.property('day');",
+                  "        pm.expect(json).to.have.property('dish');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/day-plans/2025-01-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "day-plans", "2025-01-15"]
+            },
+            "description": "Get day plan for a specific day. Returns 404 if no plan exists for that day."
+          },
+          "response": []
+        },
+        {
+          "name": "Create/Update Day Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 201\", () => {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has day plan\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('day');",
+                  "    pm.expect(json).to.have.property('dish');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dishId\": \"{{dish_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/day-plans/2025-01-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "day-plans", "2025-01-15"]
+            },
+            "description": "Create or update day plan for a specific day. Returns 201 if created, 200 if updated. Dish must belong to user."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Day Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 204\", () => {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/day-plans/2025-01-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "day-plans", "2025-01-15"]
+            },
+            "description": "Delete day plan for a specific day. Returns 204 on success, 404 if not found."
+          },
+          "response": []
+        }
+      ],
+      "description": "Day plan management for assigning dishes to specific days."
+    },
+    {
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Get Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", () => {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has event counts\", () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('dishAdded');",
+                  "    pm.expect(json).to.have.property('dayPlanned');",
+                  "    pm.expect(json.dishAdded).to.have.property('count');",
+                  "    pm.expect(json.dayPlanned).to.have.property('count');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has no-store cache header\", () => {",
+                  "    pm.expect(pm.response.headers.get('Cache-Control')).to.include('no-store');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/analytics/summary?start=2025-01-01T00:00:00Z&end=2025-01-31T23:59:59Z",
+              "host": ["{{base_url}}"],
+              "path": ["api", "analytics", "summary"],
+              "query": [
+                {
+                  "key": "start",
+                  "value": "2025-01-01T00:00:00Z",
+                  "description": "Start datetime (ISO 8601)"
+                },
+                {
+                  "key": "end",
+                  "value": "2025-01-31T23:59:59Z",
+                  "description": "End datetime (ISO 8601, cannot be future)"
+                }
+              ]
+            },
+            "description": "Get event summary counts for a date range. Returns counts for dish_added and day_planned events. Maximum 180 days range."
+          },
+          "response": []
+        }
+      ],
+      "description": "Analytics endpoints for event tracking and summary statistics."
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tag_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "dish_id",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
