@@ -11,43 +11,52 @@ const tagNameSchema = z
   .transform((val) => val.toLowerCase());
 
 /**
- * Tag selection schema - at least one of tagNames or tagIds must be present
- * This implements the TagSelection discriminated union
+ * Base tag selection object schema (without refine)
+ * This can be extended before applying the refine constraint
  */
-const tagSelectionSchema = z
-  .object({
-    tagNames: z.array(tagNameSchema).min(1).max(50, "Maximum 50 tags allowed").optional(),
-    tagIds: z.array(z.string().uuid("Invalid tag ID format")).min(1).max(50, "Maximum 50 tags allowed").optional(),
-  })
-  .refine((data) => data.tagNames || data.tagIds, {
+const tagSelectionBaseSchema = z.object({
+  tagNames: z.array(tagNameSchema).min(1).max(50, "Maximum 50 tags allowed").optional(),
+  tagIds: z.array(z.string().uuid("Invalid tag ID format")).min(1).max(50, "Maximum 50 tags allowed").optional(),
+});
+
+/**
+ * Helper function to apply the tag selection refine constraint
+ * Ensures at least one of tagNames or tagIds must be present
+ */
+const withTagSelectionRefine = <T extends z.ZodTypeAny>(schema: T) =>
+  schema.refine((data: { tagNames?: string[]; tagIds?: string[] }) => data.tagNames || data.tagIds, {
     message: "At least one of tagNames or tagIds must be provided",
   });
 
 /**
  * Validation schema for POST /dishes (create)
  */
-export const dishCreateCommandSchema = tagSelectionSchema.extend({
-  name: z
-    .string()
-    .trim()
-    .min(3, "Dish name must be at least 3 characters")
-    .max(80, "Dish name must be at most 80 characters"),
-  recipeText: z.string().max(2000, "Recipe text must be at most 2000 characters").optional(),
-  url: z.string().url("Invalid URL format").max(255, "URL must be at most 255 characters").optional(),
-});
+export const dishCreateCommandSchema = withTagSelectionRefine(
+  tagSelectionBaseSchema.extend({
+    name: z
+      .string()
+      .trim()
+      .min(3, "Dish name must be at least 3 characters")
+      .max(80, "Dish name must be at most 80 characters"),
+    recipeText: z.string().max(2000, "Recipe text must be at most 2000 characters").optional(),
+    url: z.string().url("Invalid URL format").max(255, "URL must be at most 255 characters").optional(),
+  })
+);
 
 /**
  * Validation schema for PUT /dishes/{id} (update)
  */
-export const dishUpdateCommandSchema = tagSelectionSchema.extend({
-  name: z
-    .string()
-    .trim()
-    .min(3, "Dish name must be at least 3 characters")
-    .max(80, "Dish name must be at most 80 characters"),
-  recipeText: z.string().max(2000, "Recipe text must be at most 2000 characters").nullable(),
-  url: z.string().url("Invalid URL format").max(255, "URL must be at most 255 characters").nullable(),
-});
+export const dishUpdateCommandSchema = withTagSelectionRefine(
+  tagSelectionBaseSchema.extend({
+    name: z
+      .string()
+      .trim()
+      .min(3, "Dish name must be at least 3 characters")
+      .max(80, "Dish name must be at most 80 characters"),
+    recipeText: z.string().max(2000, "Recipe text must be at most 2000 characters").nullable(),
+    url: z.string().url("Invalid URL format").max(255, "URL must be at most 255 characters").nullable(),
+  })
+);
 
 /**
  * Validation schema for GET /dishes (list with pagination and filtering)
@@ -79,7 +88,7 @@ export const dishIdParamSchema = z.object({
 /**
  * Validation schema for POST /dishes/{id}/tags (attach tags)
  */
-export const dishAttachTagsCommandSchema = tagSelectionSchema;
+export const dishAttachTagsCommandSchema = withTagSelectionRefine(tagSelectionBaseSchema);
 
 /**
  * Validation schema for DELETE /dishes/{id}/tags/{tagId} (detach tag)
