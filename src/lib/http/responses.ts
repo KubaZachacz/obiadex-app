@@ -1,0 +1,127 @@
+import type { ZodError } from "zod";
+
+/**
+ * Standard error response structure
+ */
+interface ErrorResponse {
+  error: string;
+  details?: unknown;
+}
+
+/**
+ * Creates a JSON response with the given status and data
+ */
+function jsonResponse(data: unknown, status: number): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+/**
+ * Returns a 400 Bad Request response for validation errors
+ */
+export function respondValidationError(zodError: ZodError): Response {
+  return jsonResponse(
+    {
+      error: "Validation failed",
+      details: zodError.issues,
+    } satisfies ErrorResponse,
+    400
+  );
+}
+
+/**
+ * Returns a 422 Unprocessable Entity response for domain validation errors
+ */
+export function respondUnprocessableEntity(message: string): Response {
+  return jsonResponse(
+    {
+      error: message,
+    } satisfies ErrorResponse,
+    422
+  );
+}
+
+/**
+ * Returns a 401 Unauthorized response
+ */
+export function respondUnauthorized(): Response {
+  return jsonResponse(
+    {
+      error: "Unauthorized",
+    } satisfies ErrorResponse,
+    401
+  );
+}
+
+/**
+ * Returns a 404 Not Found response
+ */
+export function respondNotFound(message = "Resource not found"): Response {
+  return jsonResponse(
+    {
+      error: message,
+    } satisfies ErrorResponse,
+    404
+  );
+}
+
+/**
+ * Returns a 409 Conflict response for duplicate resources
+ */
+export function respondConflict(message: string): Response {
+  return jsonResponse(
+    {
+      error: message,
+    } satisfies ErrorResponse,
+    409
+  );
+}
+
+/**
+ * Returns a 500 Internal Server Error response
+ */
+export function respondInternalError(message = "Internal server error"): Response {
+  return jsonResponse(
+    {
+      error: message,
+    } satisfies ErrorResponse,
+    500
+  );
+}
+
+/**
+ * Maps database errors to appropriate HTTP responses
+ */
+export function respondDbError(error: { code?: string; message: string }): Response {
+  // PostgreSQL error code 23505: unique_violation
+  if (error.code === "23505") {
+    return respondConflict("Tag with this name already exists");
+  }
+
+  // PostgreSQL error code PGRST116: no rows returned (from .single())
+  if (error.message?.includes("PGRST116") || error.message?.includes("no rows")) {
+    return respondNotFound();
+  }
+
+  // Default to internal server error
+  console.error("Database error:", error);
+  return respondInternalError();
+}
+
+/**
+ * Returns a 200 OK response with JSON data
+ */
+export function respondOk(data: unknown): Response {
+  return jsonResponse(data, 200);
+}
+
+/**
+ * Returns a 201 Created response with JSON data
+ */
+export function respondCreated(data: unknown): Response {
+  return jsonResponse(data, 201);
+}
