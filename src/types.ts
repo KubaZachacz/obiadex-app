@@ -15,7 +15,7 @@ type NonEmptyArray<T> = [T, ...T[]];
  * Enforces that at least one of tagNames/tagIds is present on commands that
  * manipulate dish-tag relationships.
  */
-type TagSelection =
+export type TagSelection =
   | {
       tagNames: NonEmptyArray<string>;
       tagIds?: NonEmptyArray<TagRow["id"]>;
@@ -28,6 +28,14 @@ type TagSelection =
 export interface Paginated<TItem> {
   data: TItem[];
   nextCursor: string | null;
+}
+
+export interface PagedResponse<TItem> {
+  data: TItem[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 }
 
 // AUTH
@@ -111,7 +119,7 @@ export interface DishListItemDTO extends DishDTO {
   lastUsedDay?: DayPlanRow["day"] | null;
 }
 
-export type DishListResponse = Paginated<DishListItemDTO>;
+export type DishListResponse = PagedResponse<DishListItemDTO>;
 
 export type DishDetailResponse = DishDTO;
 

@@ -154,3 +154,40 @@ export async function deleteTag(supabase: SupabaseClient, userId: string, tagId:
     detachedFrom: count ?? 0,
   };
 }
+
+/**
+ * Gets tags by their IDs, ensuring they belong to the specified user
+ */
+export async function getByIds(supabase: SupabaseClient, userId: string, tagIds: string[]): Promise<TagDTO[]> {
+  if (tagIds.length === 0) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("tags")
+    .select("id, name, created_at, updated_at, user_id")
+    .eq("user_id", userId)
+    .in("id", tagIds);
+
+  if (error) {
+    throw error;
+  }
+
+  return data?.map(mapToTagDTO) ?? [];
+}
+
+/**
+ * Ensures all provided tag IDs exist and belong to the user
+ * Throws an error if any tag is missing or doesn't belong to the user
+ */
+export async function ensureTagsOwnership(supabase: SupabaseClient, userId: string, tagIds: string[]): Promise<void> {
+  if (tagIds.length === 0) {
+    return;
+  }
+
+  const tags = await getByIds(supabase, userId, tagIds);
+
+  if (tags.length !== tagIds.length) {
+    throw new Error("One or more tags not found or do not belong to the user");
+  }
+}
