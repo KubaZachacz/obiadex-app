@@ -177,6 +177,14 @@ export interface DayPlanListItemDTO {
   dish: DishSummaryDTO;
 }
 
+export interface DayPlanRangeResponse {
+  data: DayPlanListItemDTO[];
+  range: {
+    start: string;
+    end: string;
+  };
+}
+
 export type DayPlanListResponse = Paginated<DayPlanListItemDTO>;
 
 export interface DayPlanRangeQuery {
