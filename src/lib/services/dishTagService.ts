@@ -22,7 +22,9 @@ export async function attachTags(
   }));
 
   const { error } = await supabase.from("dish_tags").upsert(records, {
-    onConflict: "user_id,dish_id,tag_id",
+    // Use existing unique constraint dish_tags_dish_tag_key (dish_id, tag_id)
+    // dish_id and tag_id already imply user ownership via composite FKs
+    onConflict: "dish_id,tag_id",
     ignoreDuplicates: true,
   });
 
