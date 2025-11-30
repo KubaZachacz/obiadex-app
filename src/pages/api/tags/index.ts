@@ -103,7 +103,7 @@ export async function POST(context: APIContext): Promise<Response> {
     if ("name" in command) {
       try {
         const tag = await createTag(supabase, command, user.id);
-        return respondCreated(tag);
+        return respondCreated({ data: tag });
       } catch (error: unknown) {
         return respondDbError(error as { code?: string; message: string });
       }
@@ -113,7 +113,7 @@ export async function POST(context: APIContext): Promise<Response> {
     if ("names" in command) {
       try {
         const tags = await upsertMany(supabase, command.names, user.id);
-        return respondOk({ tags });
+        return respondOk({ data: tags });
       } catch (error: unknown) {
         return respondDbError(error as { code?: string; message: string });
       }

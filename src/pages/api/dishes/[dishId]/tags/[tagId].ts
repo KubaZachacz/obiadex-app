@@ -6,6 +6,7 @@ import {
   respondUnauthorized,
   respondDbError,
   respondInternalError,
+  respondNoContent,
 } from "@/lib/http/responses";
 import { detachTag } from "@/lib/services/dishService";
 
@@ -40,7 +41,7 @@ export async function DELETE(context: APIContext): Promise<Response> {
     // Detach tag
     try {
       await detachTag(supabase, user.id, dishId, tagId);
-      return new Response(null, { status: 204 });
+      return respondNoContent();
     } catch (error: unknown) {
       return respondDbError(error as { code?: string; message: string });
     }

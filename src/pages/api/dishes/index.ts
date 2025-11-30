@@ -99,7 +99,7 @@ export async function POST(context: APIContext): Promise<Response> {
     // Create dish
     try {
       const dish = await create(supabase, command, user.id);
-      return respondCreated(dish);
+      return respondCreated({ data: dish });
     } catch (error: unknown) {
       const err = error as Error;
       // Check for domain validation errors

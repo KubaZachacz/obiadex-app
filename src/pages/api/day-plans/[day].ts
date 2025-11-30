@@ -9,6 +9,7 @@ import {
   respondNotFound,
   respondDbError,
   respondInternalError,
+  respondNoContent,
 } from "@/lib/http/responses";
 import { getByDay, upsert, deleteDayPlan } from "@/lib/services/dayPlanService";
 
@@ -47,7 +48,7 @@ export async function GET(context: APIContext): Promise<Response> {
       return respondNotFound("Day plan not found");
     }
 
-    return respondOk(dayPlan);
+    return respondOk({ data: dayPlan });
   } catch (error) {
     console.error("Error in GET /api/day-plans/{day}:", error);
     return respondInternalError();
@@ -113,10 +114,10 @@ export async function PUT(context: APIContext): Promise<Response> {
 
       // Return 201 for create, 200 for update
       if (result.isNew) {
-        return respondCreated(result.data);
+        return respondCreated({ data: result.data });
       }
 
-      return respondOk(result.data);
+      return respondOk({ data: result.data });
     } catch (error: unknown) {
       const err = error as Error;
       // Check for domain validation errors
@@ -160,7 +161,7 @@ export async function DELETE(context: APIContext): Promise<Response> {
     // Delete day plan
     try {
       await deleteDayPlan(supabase, user.id, day);
-      return new Response(null, { status: 204 });
+      return respondNoContent();
     } catch (error: unknown) {
       const err = error as Error;
       if (err.message?.includes("not found")) {

@@ -67,7 +67,7 @@ export async function POST(context: APIContext): Promise<Response> {
     // Attach tags
     try {
       const tags = await attachTags(supabase, user.id, dishId, command);
-      return respondOk({ tags });
+      return respondOk({ data: tags });
     } catch (error: unknown) {
       const err = error as Error;
       // Check for domain validation errors

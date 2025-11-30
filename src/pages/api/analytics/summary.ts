@@ -40,13 +40,7 @@ export async function GET(context: APIContext): Promise<Response> {
     const summary = await getSummary(supabase, user.id, start, end);
 
     // Return with Cache-Control: no-store header
-    return new Response(JSON.stringify(summary), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-store",
-      },
-    });
+    return respondOk({ data: summary }, { "Cache-Control": "no-store" });
   } catch (error) {
     console.error("Error in GET /api/analytics/summary:", error);
     return respondInternalError();

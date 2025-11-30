@@ -8,6 +8,7 @@ import {
   respondNotFound,
   respondDbError,
   respondInternalError,
+  respondNoContent,
 } from "@/lib/http/responses";
 import { getById, update, deleteDish } from "@/lib/services/dishService";
 
@@ -46,7 +47,7 @@ export async function GET(context: APIContext): Promise<Response> {
       return respondNotFound("Dish not found");
     }
 
-    return respondOk(dish);
+    return respondOk({ data: dish });
   } catch (error) {
     console.error("Error in GET /api/dishes/{dishId}:", error);
     return respondInternalError();
@@ -108,7 +109,7 @@ export async function PUT(context: APIContext): Promise<Response> {
     // Update dish
     try {
       const dish = await update(supabase, user.id, dishId, command);
-      return respondOk(dish);
+      return respondOk({ data: dish });
     } catch (error: unknown) {
       const err = error as Error;
       // Check for domain validation errors
@@ -160,7 +161,7 @@ export async function DELETE(context: APIContext): Promise<Response> {
     // Delete dish
     try {
       await deleteDish(supabase, user.id, dishId);
-      return new Response(null, { status: 204 });
+      return respondNoContent();
     } catch (error: unknown) {
       return respondDbError(error as { code?: string; message: string });
     }

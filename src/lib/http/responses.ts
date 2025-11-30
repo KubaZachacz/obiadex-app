@@ -11,11 +11,12 @@ interface ErrorResponse {
 /**
  * Creates a JSON response with the given status and data
  */
-function jsonResponse(data: unknown, status: number): Response {
+function jsonResponse(data: unknown, status: number, headers?: HeadersInit): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "Content-Type": "application/json",
+      ...headers,
     },
   });
 }
@@ -99,7 +100,7 @@ export function respondInternalError(message = "Internal server error"): Respons
 export function respondDbError(error: { code?: string; message: string }): Response {
   // PostgreSQL error code 23505: unique_violation
   if (error.code === "23505") {
-    return respondConflict("Tag with this name already exists");
+    return respondConflict("Resource conflict: duplicate entry");
   }
 
   // PostgreSQL error code PGRST116: no rows returned (from .single())
@@ -115,13 +116,20 @@ export function respondDbError(error: { code?: string; message: string }): Respo
 /**
  * Returns a 200 OK response with JSON data
  */
-export function respondOk(data: unknown): Response {
-  return jsonResponse(data, 200);
+export function respondOk(data: unknown, headers?: HeadersInit): Response {
+  return jsonResponse(data, 200, headers);
 }
 
 /**
  * Returns a 201 Created response with JSON data
  */
-export function respondCreated(data: unknown): Response {
-  return jsonResponse(data, 201);
+export function respondCreated(data: unknown, headers?: HeadersInit): Response {
+  return jsonResponse(data, 201, headers);
+}
+
+/**
+ * Returns a 204 No Content response
+ */
+export function respondNoContent(): Response {
+  return new Response(null, { status: 204 });
 }

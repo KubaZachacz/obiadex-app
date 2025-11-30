@@ -1,6 +1,6 @@
 import type { APIContext } from "astro";
 
-import { respondUnauthorized, respondInternalError } from "@/lib/http/responses";
+import { respondUnauthorized, respondInternalError, respondNoContent } from "@/lib/http/responses";
 import { logout } from "@/lib/services/authService";
 
 export const prerender = false;
@@ -26,7 +26,7 @@ export async function POST(context: APIContext): Promise<Response> {
     // Log out user
     try {
       await logout(supabase);
-      return new Response(null, { status: 204 });
+      return respondNoContent();
     } catch (error: unknown) {
       console.error("Error in POST /api/auth/logout:", error);
       return respondInternalError();

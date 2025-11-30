@@ -41,7 +41,7 @@ export async function DELETE(context: APIContext): Promise<Response> {
     // Delete tag from database
     try {
       const result = await deleteTag(supabase, user.id, id);
-      return respondOk(result);
+      return respondOk({ data: result });
     } catch (error: unknown) {
       return respondDbError(error as { code?: string; message: string });
     }
