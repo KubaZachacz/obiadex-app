@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@/db/supabase.client";
+import type { Json } from "@/db/database.types";
 import type {
   DayPlanDTO,
   DayPlanListItemDTO,
@@ -12,16 +13,12 @@ import type {
 /**
  * Logs an event to the events table (fire and forget)
  */
-async function logEvent(
-  supabase: SupabaseClient,
-  userId: string,
-  eventType: string,
-  payload: Record<string, unknown>
-): Promise<void> {
+async function logEvent(supabase: SupabaseClient, userId: string, eventType: string, payload: Json): Promise<void> {
   try {
     await supabase.from("events").insert({
       user_id: userId,
       event_type: eventType,
+      // Ensure payload conforms to Json type (no Dates/functions)
       payload,
     });
   } catch (error) {
@@ -111,7 +108,9 @@ export async function getByDay(supabase: SupabaseClient, userId: string, day: st
     .single();
 
   if (error) {
-    if (error.message?.includes("PGRST116") || error.message?.includes("no rows")) {
+    // Supabase returns code 'PGRST116' when .single() finds 0 rows
+    // Treat this as a normal "not found" (return null) rather than an internal error
+    if ((error as { code?: string }).code === "PGRST116" || error.message?.includes("no rows")) {
       return null;
     }
     throw error;
