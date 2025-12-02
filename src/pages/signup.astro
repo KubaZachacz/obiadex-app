@@ -1,0 +1,15 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import AuthPageLayout from "@/components/AuthPageLayout.astro";
+import { SignupForm } from "@/components/SignupForm";
+---
+
+<Layout title="Rejestracja - Obiadex">
+  <AuthPageLayout
+    title="Załóż konto"
+    subtitle="Utwórz nowe konto aby rozpocząć planowanie posiłków"
+    secondaryLinks={[{ href: "/login", label: "Masz już konto? Zaloguj się" }]}
+  >
+    <SignupForm client:load />
+  </AuthPageLayout>
+</Layout>

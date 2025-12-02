@@ -1,0 +1,15 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import AuthPageLayout from "@/components/AuthPageLayout.astro";
+import { LoginForm } from "@/components/LoginForm";
+---
+
+<Layout title="Logowanie - Obiadex">
+  <AuthPageLayout
+    title="Zaloguj się"
+    subtitle="Wprowadź swoje dane aby uzyskać dostęp do konta"
+    secondaryLinks={[{ href: "/signup", label: "Nie masz konta? Załóż konto" }]}
+  >
+    <LoginForm client:load />
+  </AuthPageLayout>
+</Layout>

@@ -1,23 +1,3 @@
-Twoim zadaniem jest zaimplementowanie widoku frontendu w oparciu o podany plan implementacji i zasady implementacji. Twoim celem jest stworzenie szczegółowej i dokładnej implementacji, która jest zgodna z dostarczonym planem, poprawnie reprezentuje strukturę komponentów, integruje się z API i obsługuje wszystkie określone interakcje użytkownika.
-
-Najpierw przejrzyj plan implementacji:
-
-<implementation_plan>
-{{implementation-plan}} <- zamień na referencję do planu implementacji widoku (np. @generations-view-implementation-plan.md)
-</implementation_plan>
-
-Teraz przejrzyj zasady implementacji:
-
-<implementation_rules>
-{{frontend-rules}} <- zamień na referencję do reguł frontendowych (np. @shared.mdc, @frontend.mdc, @astro.mdc, @react.mdc, @ui-shadcn-helper.mdc)
-</implementation_rules>
-
-Przejrzyj zdefiniowane typy:
-
-<types>
-{{types}} <- zamień na referencję do definicji DTOsów (np. @types.ts)
-</types>
-
 Wdrażaj plan zgodnie z następującym podejściem:
 
 <implementation_approach>

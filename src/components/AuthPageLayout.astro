@@ -1,0 +1,46 @@
+---
+interface SecondaryLink {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  secondaryLinks?: SecondaryLink[];
+}
+
+const { title, subtitle, secondaryLinks = [] } = Astro.props;
+---
+
+<div class="flex min-h-screen items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md space-y-8">
+    <div class="text-center">
+      <h1 class="text-3xl font-bold tracking-tight text-foreground">
+        {title}
+      </h1>
+      {subtitle && <p class="mt-2 text-sm text-muted-foreground">{subtitle}</p>}
+    </div>
+
+    <div class="mt-8">
+      <slot />
+    </div>
+
+    {
+      secondaryLinks.length > 0 && (
+        <div class="mt-6 space-y-2 text-center text-sm">
+          {secondaryLinks.map((link) => (
+            <div>
+              <a
+                href={link.href}
+                class="font-medium text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+              >
+                {link.label}
+              </a>
+            </div>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</div>
