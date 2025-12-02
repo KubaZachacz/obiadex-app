@@ -1,8 +1,28 @@
-Wdrażaj plan zgodnie z następującym podejściem:
+Twoim zadaniem jest zaimplementowanie widoku frontendu w oparciu o podany plan implementacji i zasady implementacji. Twoim celem jest stworzenie szczegółowej i dokładnej implementacji, która jest zgodna z dostarczonym planem, poprawnie reprezentuje strukturę komponentów, integruje się z API i obsługuje wszystkie określone interakcje użytkownika.
 
-<implementation_approach>
-Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
-</implementation_approach>
+Najpierw przejrzyj plan implementacji:
+
+<implementation_plan>
+
+</implementation_plan>
+
+Teraz przejrzyj zasady implementacji:
+
+<implementation_rules>
+
+</implementation_rules>
+
+Przejrzyj zdefiniowane typy:
+
+<types>
+
+</types>
+
+<postman_collection>
+
+</postman_collection>
+
+Wdrażaj każdy z podanych planów zgodnie z następującym podejściem:
 
 Dokładnie przeanalizuj plan wdrożenia i zasady. Zwróć szczególną uwagę na strukturę komponentów, wymagania dotyczące integracji API i interakcje użytkownika opisane w planie.
 
