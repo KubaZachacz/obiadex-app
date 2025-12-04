@@ -1,8 +1,8 @@
 ---
-import Welcome from "../components/Welcome.astro";
+import { HomeView } from "../components/HomeView";
 import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
-  <Welcome />
+  <HomeView client:load />
 </Layout>

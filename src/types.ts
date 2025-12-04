@@ -123,19 +123,19 @@ export type DishListResponse = PagedResponse<DishListItemDTO>;
 
 export type DishDetailResponse = DishDTO;
 
-export interface DishCreateCommand extends TagSelection {
+export type DishCreateCommand = TagSelection & {
   name: DishRow["name"];
   recipeText?: DishRow["recipe_text"];
   url?: DishRow["url"];
-}
+};
 
-export interface DishUpdateCommand extends TagSelection {
+export type DishUpdateCommand = TagSelection & {
   name: DishRow["name"];
   recipeText: DishRow["recipe_text"];
   url: DishRow["url"];
-}
+};
 
-export interface DishAttachTagsCommand extends TagSelection {}
+export type DishAttachTagsCommand = TagSelection;
 
 export interface DishAttachTagsResponse {
   tags: TagDTO[];
