@@ -18,12 +18,13 @@ import type { TagDTO } from "@/types";
 interface TagCreatableComboboxProps {
   value: TagDTO[];
   onChange: (tags: TagDTO[]) => void;
-  onCreate: (name: string) => Promise<TagDTO>;
-  onDelete: (tag: TagDTO) => Promise<boolean>;
+  onCreate?: (name: string) => Promise<TagDTO>;
+  onDelete?: (tag: TagDTO) => Promise<boolean>;
   options: TagDTO[];
   isLoading?: boolean;
   error?: string;
   className?: string;
+  maxTags?: number;
 }
 
 export function TagCreatableCombobox({
@@ -35,6 +36,7 @@ export function TagCreatableCombobox({
   isLoading = false,
   error,
   className,
+  maxTags,
 }: TagCreatableComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -48,10 +50,13 @@ export function TagCreatableCombobox({
   const popoverContentId = useId();
 
   const normalizedSearch = search.toLowerCase().trim();
+  const maxReached = maxTags !== undefined && safeValue.length >= maxTags;
   const canCreate =
+    onCreate &&
     normalizedSearch.length >= 2 &&
     normalizedSearch.length <= 30 &&
-    !options.some((tag) => tag.name.toLowerCase() === normalizedSearch);
+    !options.some((tag) => tag.name.toLowerCase() === normalizedSearch) &&
+    !maxReached;
 
   const filteredOptions = useMemo(() => {
     if (!normalizedSearch) {
@@ -66,13 +71,17 @@ export function TagCreatableCombobox({
         onChange(safeValue.filter((t) => t.id !== tag.id));
         return;
       }
+      // Check maxTags limit
+      if (maxReached) {
+        return;
+      }
       onChange([...safeValue, tag]);
     },
-    [onChange, safeValue, selectedIds]
+    [onChange, safeValue, selectedIds, maxReached]
   );
 
   const handleCreateTag = useCallback(async () => {
-    if (!canCreate || isCreating) return;
+    if (!canCreate || isCreating || !onCreate) return;
 
     setIsCreating(true);
     try {
@@ -95,14 +104,18 @@ export function TagCreatableCombobox({
     [onChange, safeValue]
   );
 
-  const handleRequestDelete = useCallback((tag: TagDTO, event?: React.MouseEvent<HTMLButtonElement>) => {
-    event?.preventDefault();
-    event?.stopPropagation();
-    setDeleteConfirm(tag);
-  }, []);
+  const handleRequestDelete = useCallback(
+    (tag: TagDTO, event?: React.MouseEvent<HTMLButtonElement>) => {
+      if (!onDelete) return;
+      event?.preventDefault();
+      event?.stopPropagation();
+      setDeleteConfirm(tag);
+    },
+    [onDelete]
+  );
 
   const handleConfirmDelete = useCallback(async () => {
-    if (!deleteConfirm || isDeleting) return;
+    if (!deleteConfirm || isDeleting || !onDelete) return;
 
     setIsDeleting(true);
     try {
@@ -174,7 +187,15 @@ export function TagCreatableCombobox({
               onKeyDown={handleTriggerKeyDown}
             >
               <div className="flex flex-1 flex-wrap items-center gap-2">
-                {safeValue.length === 0 && <span className="text-muted-foreground">Wybierz lub wpisz tagi</span>}
+                {safeValue.length === 0 && (
+                  <span className="text-muted-foreground">
+                    {maxTags
+                      ? `🏷️ Wybierz tagi (max ${maxTags})`
+                      : onCreate
+                        ? "Wybierz lub utwórz tagi"
+                        : "Wybierz tagi"}
+                  </span>
+                )}
                 {safeValue.map((tag) => (
                   <Badge key={tag.id} variant="secondary" className="flex items-center gap-1">
                     <span>{tag.name}</span>
@@ -215,7 +236,7 @@ export function TagCreatableCombobox({
           <PopoverContent id={popoverContentId} className="w-[min(420px,90vw)] p-0" align="start">
             <Command shouldFilter={false}>
               <CommandInput
-                placeholder="Szukaj lub utwórz tag..."
+                placeholder={onCreate ? "Szukaj lub utwórz tag..." : "Szukaj tagu..."}
                 value={search}
                 onValueChange={setSearch}
                 aria-label="Wyszukaj tag"
@@ -242,17 +263,25 @@ export function TagCreatableCombobox({
                       </CommandGroup>
                     )}
 
+                    {maxReached && maxTags && (
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                        Osiągnięto limit {maxTags} {maxTags === 1 ? "tagu" : maxTags < 5 ? "tagów" : "tagów"}
+                      </div>
+                    )}
+
                     {filteredOptions.length > 0 ? (
                       <CommandGroup heading="Dostępne tagi">
                         {filteredOptions.map((tag) => {
                           const isSelected = selectedIds.includes(tag.id);
+                          const isDisabled = maxReached && !isSelected;
 
                           return (
                             <CommandItem
                               key={tag.id}
                               value={tag.name}
                               onSelect={() => handleToggleTag(tag)}
-                              className="cursor-pointer"
+                              disabled={isDisabled}
+                              className={cn("cursor-pointer", isDisabled && "opacity-50")}
                             >
                               <div className="flex w-full items-center justify-between gap-2">
                                 <span className="flex items-center gap-2">
@@ -284,30 +313,32 @@ export function TagCreatableCombobox({
                                     {tag.name}
                                   </span>
                                 </span>
-                                <button
-                                  type="button"
-                                  className="rounded-md p-1 text-muted-foreground transition hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                  aria-label={`Usuń tag ${tag.name} globalnie`}
-                                  onClick={(event) => handleRequestDelete(tag, event)}
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="size-4"
-                                    aria-hidden="true"
+                                {onDelete && (
+                                  <button
+                                    type="button"
+                                    className="rounded-md p-1 text-muted-foreground transition hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    aria-label={`Usuń tag ${tag.name} globalnie`}
+                                    onClick={(event) => handleRequestDelete(tag, event)}
                                   >
-                                    <path d="M3 6h18" />
-                                    <path d="M8 6V4h8v2" />
-                                    <path d="M10 11v6" />
-                                    <path d="M14 11v6" />
-                                    <path d="M5 6h14l-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2l-1-13z" />
-                                  </svg>
-                                </button>
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="1.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      className="size-4"
+                                      aria-hidden="true"
+                                    >
+                                      <path d="M3 6h18" />
+                                      <path d="M8 6V4h8v2" />
+                                      <path d="M10 11v6" />
+                                      <path d="M14 11v6" />
+                                      <path d="M5 6h14l-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2l-1-13z" />
+                                    </svg>
+                                  </button>
+                                )}
                               </div>
                             </CommandItem>
                           );

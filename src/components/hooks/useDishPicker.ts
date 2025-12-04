@@ -1,16 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type {
-  DishListItemDTO,
-  DishListResponse,
-  TagDTO,
-  TagListResponse,
-  DayPlanUpsertCommand,
-  DayPlanUpsertResponse,
-} from "@/types";
+import type { DishListItemDTO, DishListResponse, TagDTO, TagListResponse, DayPlanUpsertCommand } from "@/types";
 
 interface DishPickerState {
   day: string;
   tags: TagDTO[];
+  nameSearch: string;
   dishes: DishListItemDTO[];
   selectedId?: string;
   status: "idle" | "loading" | "error";
@@ -24,6 +18,7 @@ interface UseDishPickerReturn {
   isLoadingTags: boolean;
   selectDish: (dishId: string) => void;
   setSelectedTags: (tags: TagDTO[]) => void;
+  setNameSearch: (search: string) => void;
   saveDayPlan: () => Promise<boolean>;
   refetchDishes: () => void;
 }
@@ -36,6 +31,7 @@ export function useDishPicker(day: string): UseDishPickerReturn {
   const [state, setState] = useState<DishPickerState>({
     day,
     tags: [],
+    nameSearch: "",
     dishes: [],
     selectedId: undefined,
     status: "idle",
@@ -89,6 +85,11 @@ export function useDishPicker(day: string): UseDishPickerReturn {
           params.append("tagId", tag.id);
         });
 
+        // Add name search filter
+        if (state.nameSearch.trim()) {
+          params.append("q", state.nameSearch.trim());
+        }
+
         const response = await fetch(`/api/dishes?${params.toString()}`, {
           signal,
           headers: {
@@ -122,7 +123,7 @@ export function useDishPicker(day: string): UseDishPickerReturn {
         }
       }
     },
-    [state.tags]
+    [state.tags, state.nameSearch]
   );
 
   // Debounced fetch effect
@@ -169,6 +170,14 @@ export function useDishPicker(day: string): UseDishPickerReturn {
     }));
   }, []);
 
+  const setNameSearch = useCallback((search: string) => {
+    setState((prev) => ({
+      ...prev,
+      nameSearch: search,
+      selectedId: undefined, // Reset selection when filters change
+    }));
+  }, []);
+
   const saveDayPlan = useCallback(async (): Promise<boolean> => {
     if (!state.selectedId) {
       setState((prev) => ({
@@ -207,7 +216,7 @@ export function useDishPicker(day: string): UseDishPickerReturn {
         throw new Error(`Failed to save day plan: ${response.status}`);
       }
 
-      const _data: DayPlanUpsertResponse = await response.json();
+      await response.json();
 
       setState((prev) => ({ ...prev, saving: false }));
       return true;
@@ -238,6 +247,7 @@ export function useDishPicker(day: string): UseDishPickerReturn {
     isLoadingTags,
     selectDish,
     setSelectedTags,
+    setNameSearch,
     saveDayPlan,
     refetchDishes,
   };

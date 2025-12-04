@@ -89,7 +89,7 @@ export function isToday(date: Date): boolean {
 /**
  * Formats date range for display (e.g., "2–8 XII 2025").
  */
-export function formatWeekRange(start: Date, end: Date, locale: string = "pl-PL"): string {
+export function formatWeekRange(start: Date, end: Date, locale = "pl-PL"): string {
   const startDay = start.getDate();
   const endDay = end.getDate();
   const month = end.toLocaleDateString(locale, { month: "short" }).toUpperCase();

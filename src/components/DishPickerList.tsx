@@ -15,13 +15,7 @@ interface DishPickerListProps {
  * DishPickerList displays dishes sorted by usage_prio with single selection.
  * Shows dish name, last used date, and tags.
  */
-export function DishPickerList({
-  items,
-  isLoading,
-  onSelect,
-  selectedId,
-  emptyVariant,
-}: DishPickerListProps) {
+export function DishPickerList({ items, isLoading, onSelect, selectedId, emptyVariant }: DishPickerListProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -41,10 +35,7 @@ export function DishPickerList({
             : "Brak dań z wybranymi tagami. Spróbuj zmienić filtry."}
         </p>
         {emptyVariant === "no-data" && (
-          <a
-            href="/dishes/new"
-            className="text-sm text-primary hover:underline"
-          >
+          <a href="/dishes/new" className="text-sm text-primary hover:underline">
             Dodaj danie
           </a>
         )}
@@ -87,9 +78,7 @@ export function DishPickerList({
               </div>
 
               {dish.lastUsedDay && (
-                <div className="text-xs text-muted-foreground">
-                  Ostatnio użyte: {formatDate(dish.lastUsedDay)}
-                </div>
+                <div className="text-xs text-muted-foreground">Ostatnio użyte: {formatDate(dish.lastUsedDay)}</div>
               )}
 
               {dish.tags.length > 0 && (

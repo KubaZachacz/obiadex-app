@@ -10,7 +10,7 @@ export const WEEK_NAV_OFFSETS = {
   },
   mobile: {
     prevDays: 2, // 2 days before current week start
-    nextDays: 2,  // 2 days after current week end
+    nextDays: 2, // 2 days after current week end
   },
 } as const;
 
