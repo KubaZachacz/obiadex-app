@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Header } from "@/components/Header";
 import { SearchInput } from "@/components/SearchInput";
 import { TagFilterCombobox } from "@/components/TagFilterCombobox";
 import { DishList } from "@/components/DishList";
@@ -181,8 +180,6 @@ export function DishesView() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header currentPath="/dishes" />
-
       <div className="container mx-auto max-w-4xl px-4 py-8">
         {/* Page Title and Filters */}
         <div className="mb-8">

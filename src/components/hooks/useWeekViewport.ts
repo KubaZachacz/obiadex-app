@@ -1,13 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { DayPlanListItemDTO, DayPlanRangeResponse } from "@/types";
 import { WEEK_NAV_OFFSETS } from "@/lib/date/constants";
-import {
-  formatDateISO,
-  getWeekStart,
-  getWeekEnd,
-  addDays,
-  addWeeks,
-} from "@/lib/date/utils";
+import { formatDateISO, getWeekStart, getWeekEnd, addDays, addWeeks } from "@/lib/date/utils";
 
 export interface WeekViewport {
   weekIndex: number;
@@ -23,17 +17,16 @@ interface UseWeekViewportReturn {
   dayPlans: Record<string, DayPlanListItemDTO>;
   isLoading: boolean;
   error: string | null;
-  isMobile: boolean;
   setWeekIndex: (index: number) => void;
   refetch: () => void;
 }
 
 /**
- * Detects if the viewport is mobile based on window width.
+ * Simple mobile detection - only used for viewport calculations, not layout.
  */
-function isMobileViewport(): boolean {
+function getIsMobile(): boolean {
   if (typeof window === "undefined") return false;
-  return window.innerWidth < 768; // md breakpoint
+  return window.innerWidth < 768;
 }
 
 /**
@@ -45,66 +38,57 @@ export function useWeekViewport(): UseWeekViewportReturn {
   const [dayPlans, setDayPlans] = useState<Record<string, DayPlanListItemDTO>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Initialize as false to avoid hydration mismatch (will update after mount)
-  const [isMobile, setIsMobile] = useState(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Update mobile detection on mount and resize
+  // Calculate viewport based on weekIndex - check mobile on each call
+  const calculateViewport = useCallback((index: number): WeekViewport => {
+    const baseDate = new Date();
+    const weekStart = getWeekStart(index, baseDate);
+    const weekEnd = getWeekEnd(index, baseDate);
+
+    const visibleStart = formatDateISO(weekStart);
+    const visibleEnd = formatDateISO(weekEnd);
+
+    const isMobile = getIsMobile();
+
+    let prefetchStart: string;
+    let prefetchEnd: string;
+
+    if (isMobile) {
+      // Mobile: ±2 days from visible range
+      const { prevDays, nextDays } = WEEK_NAV_OFFSETS.mobile;
+      prefetchStart = formatDateISO(addDays(weekStart, -prevDays));
+      prefetchEnd = formatDateISO(addDays(weekEnd, nextDays));
+    } else {
+      // Desktop: ±1 week from visible range
+      const { prevWeeks, nextWeeks } = WEEK_NAV_OFFSETS.desktop;
+      prefetchStart = formatDateISO(addWeeks(weekStart, -prevWeeks));
+      prefetchEnd = formatDateISO(addWeeks(weekEnd, nextWeeks));
+    }
+
+    return {
+      weekIndex: index,
+      visibleStart,
+      visibleEnd,
+      prefetchStart,
+      prefetchEnd,
+    };
+  }, []);
+
+  const [viewport, setViewport] = useState<WeekViewport>(() => calculateViewport(0));
+
+  // Update viewport when weekIndex changes or window resizes (mobile ↔ desktop)
   useEffect(() => {
-    // Set initial value after mount to avoid hydration mismatch
-    setIsMobile(isMobileViewport());
+    setViewport(calculateViewport(weekIndex));
 
     const handleResize = () => {
-      setIsMobile(isMobileViewport());
+      setViewport(calculateViewport(weekIndex));
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Calculate viewport based on weekIndex and device type
-  const calculateViewport = useCallback(
-    (index: number): WeekViewport => {
-      const baseDate = new Date();
-      const weekStart = getWeekStart(index, baseDate);
-      const weekEnd = getWeekEnd(index, baseDate);
-
-      const visibleStart = formatDateISO(weekStart);
-      const visibleEnd = formatDateISO(weekEnd);
-
-      let prefetchStart: string;
-      let prefetchEnd: string;
-
-      if (isMobile) {
-        // Mobile: ±2 days from visible range
-        const { prevDays, nextDays } = WEEK_NAV_OFFSETS.mobile;
-        prefetchStart = formatDateISO(addDays(weekStart, -prevDays));
-        prefetchEnd = formatDateISO(addDays(weekEnd, nextDays));
-      } else {
-        // Desktop: ±1 week from visible range
-        const { prevWeeks, nextWeeks } = WEEK_NAV_OFFSETS.desktop;
-        prefetchStart = formatDateISO(addWeeks(weekStart, -prevWeeks));
-        prefetchEnd = formatDateISO(addWeeks(weekEnd, nextWeeks));
-      }
-
-      return {
-        weekIndex: index,
-        visibleStart,
-        visibleEnd,
-        prefetchStart,
-        prefetchEnd,
-      };
-    },
-    [isMobile]
-  );
-
-  const [viewport, setViewport] = useState<WeekViewport>(() => calculateViewport(0));
-
-  // Update viewport when weekIndex or isMobile changes
-  useEffect(() => {
-    setViewport(calculateViewport(weekIndex));
   }, [weekIndex, calculateViewport]);
 
   // Fetch day plans for the current viewport
@@ -202,7 +186,6 @@ export function useWeekViewport(): UseWeekViewportReturn {
     dayPlans,
     isLoading,
     error,
-    isMobile,
     setWeekIndex,
     refetch,
   };

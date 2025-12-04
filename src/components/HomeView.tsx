@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWeekViewport } from "@/components/hooks/useWeekViewport";
 import { useAddDishDialog } from "@/components/hooks/useAddDishDialog";
-import { Header } from "./Header";
 import { WeekNavigator } from "./WeekNavigator";
 import { DayWeekView } from "./DayWeekView";
 import { DayPlanOverlay } from "./DayPlanOverlay";
@@ -16,7 +15,7 @@ export function HomeView() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const { isOpen: isAddDishOpen, open: openAddDish, close: closeAddDish } = useAddDishDialog();
 
-  const { weekIndex, viewport, dayPlans, isLoading, error, isMobile, setWeekIndex, refetch } = useWeekViewport();
+  const { weekIndex, viewport, dayPlans, isLoading, error, setWeekIndex, refetch } = useWeekViewport();
 
   // Sync URL query param with selectedDay state
   useEffect(() => {
@@ -75,8 +74,6 @@ export function HomeView() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header currentPath="/" />
-
       <WeekNavigator weekIndex={weekIndex} onChange={setWeekIndex} />
 
       {error && (
@@ -91,13 +88,7 @@ export function HomeView() {
         </div>
       )}
 
-      <DayWeekView
-        viewport={viewport}
-        dayPlans={dayPlans}
-        isLoading={isLoading}
-        onSelectDay={handleSelectDay}
-        isMobile={isMobile}
-      />
+      <DayWeekView viewport={viewport} dayPlans={dayPlans} isLoading={isLoading} onSelectDay={handleSelectDay} />
 
       <DayPlanOverlay day={selectedDay} onClose={handleCloseOverlay} onSaved={handleSaved} />
 
