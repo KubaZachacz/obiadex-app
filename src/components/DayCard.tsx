@@ -40,7 +40,7 @@ export function DayCard({ day, plan, onOpen, dimmed = false }: DayCardProps) {
   return (
     <Card
       className={cn(
-        "cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring py-1.5",
+        "cursor-pointer transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring py-1.5 lg:py-2",
         today && "border-primary border-2",
         dimmed && "opacity-40"
       )}
@@ -50,8 +50,8 @@ export function DayCard({ day, plan, onOpen, dimmed = false }: DayCardProps) {
       role="button"
       aria-label={plan ? `${dayName}, ${dayNumber} - ${plan.dish.name}` : `${dayName}, ${dayNumber} - Wybierz danie`}
     >
-      <CardContent className="p-2">
-        <div className="flex items-center gap-2">
+      <CardContent className="px-3 py-2">
+        <div className="flex items-center gap-4">
           {/* Column 1: Date and day name */}
           <div className="flex-shrink-0 space-y-0.5 min-w-[3rem]">
             <div className="text-[10px] text-muted-foreground leading-tight">{fullDate}</div>
@@ -63,7 +63,7 @@ export function DayCard({ day, plan, onOpen, dimmed = false }: DayCardProps) {
             {plan ? (
               <div className="text-xs font-medium line-clamp-1 leading-tight truncate">{plan.dish.name}</div>
             ) : (
-              <div className="text-xs text-muted-foreground leading-tight">Wybierz</div>
+              <div className="text-xs text-gray-300 leading-tight ">Wybierz</div>
             )}
           </div>
 

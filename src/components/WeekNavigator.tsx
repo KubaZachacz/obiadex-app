@@ -12,11 +12,7 @@ interface WeekNavigatorProps {
 /**
  * WeekNavigator component with prev/next buttons and swipe gesture support on mobile.
  */
-export function WeekNavigator({
-  weekIndex,
-  onChange,
-  locale = "pl-PL",
-}: WeekNavigatorProps) {
+export function WeekNavigator({ weekIndex, onChange, locale = "pl-PL" }: WeekNavigatorProps) {
   const [isNavigating, setIsNavigating] = useState(false);
   const touchStartXRef = useRef<number | null>(null);
   const touchEndXRef = useRef<number | null>(null);
@@ -71,7 +67,7 @@ export function WeekNavigator({
 
   return (
     <div
-      className="sticky top-14 z-40 bg-background flex items-center justify-between gap-4 px-4 py-3 border-b"
+      className="sticky top-14 z-40 bg-background flex items-center justify-between gap-4 px-4 lg:py-3 py-1 border-b"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -87,18 +83,12 @@ export function WeekNavigator({
       </Button>
 
       <div className="flex-1 text-center">
-        <span className="text-sm font-medium" aria-live="polite">
+        <span className="lg:text-sm text-xs font-medium" aria-live="polite">
           {rangeLabel}
         </span>
       </div>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={handleNext}
-        disabled={isNavigating}
-        aria-label="Następny tydzień"
-      >
+      <Button variant="ghost" size="icon" onClick={handleNext} disabled={isNavigating} aria-label="Następny tydzień">
         <ChevronRight className="h-5 w-5" />
       </Button>
     </div>
