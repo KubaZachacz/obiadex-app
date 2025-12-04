@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useWeekViewport } from "@/components/hooks/useWeekViewport";
+import { useAddDishDialog } from "@/components/hooks/useAddDishDialog";
 import { Header } from "./Header";
 import { WeekNavigator } from "./WeekNavigator";
 import { DayWeekView } from "./DayWeekView";
 import { DayPlanOverlay } from "./DayPlanOverlay";
+import { DishEditorOverlay } from "./DishEditorOverlay";
 import { FAB } from "./FAB";
 
 /**
@@ -12,6 +14,7 @@ import { FAB } from "./FAB";
  */
 export function HomeView() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const { isOpen: isAddDishOpen, open: openAddDish, close: closeAddDish } = useAddDishDialog();
 
   const { weekIndex, viewport, dayPlans, isLoading, error, isMobile, setWeekIndex, refetch } = useWeekViewport();
 
@@ -65,9 +68,9 @@ export function HomeView() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  // Handle FAB click - navigate to /dishes
+  // Handle FAB click - open add dish dialog
   const handleAddDish = () => {
-    window.location.href = "/dishes";
+    openAddDish();
   };
 
   return (
@@ -97,6 +100,8 @@ export function HomeView() {
       />
 
       <DayPlanOverlay day={selectedDay} onClose={handleCloseOverlay} onSaved={handleSaved} />
+
+      <DishEditorOverlay mode="create" isOpen={isAddDishOpen} onClose={closeAddDish} />
 
       <FAB onClick={handleAddDish} label="Dodaj danie" />
     </div>

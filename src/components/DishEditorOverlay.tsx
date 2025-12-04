@@ -7,9 +7,10 @@ interface DishEditorOverlayProps {
   dishId?: string;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export function DishEditorOverlay({ mode, dishId, isOpen, onClose }: DishEditorOverlayProps) {
+export function DishEditorOverlay({ mode, dishId, isOpen, onClose, onSuccess }: DishEditorOverlayProps) {
   const [open, setOpen] = useState(isOpen);
 
   useEffect(() => {
@@ -24,18 +25,20 @@ export function DishEditorOverlay({ mode, dishId, isOpen, onClose }: DishEditorO
   };
 
   const handleSuccess = () => {
-    // Close the dialog and navigate back
+    // Close the dialog and call onSuccess callback
     setOpen(false);
-    window.location.href = "/dishes";
+    if (typeof onClose === "function") {
+      onClose();
+    }
+    if (typeof onSuccess === "function") {
+      onSuccess();
+    }
   };
 
   const handleCancel = () => {
     setOpen(false);
     if (typeof onClose === "function") {
       onClose();
-    } else {
-      // Fallback: navigate back if onClose is not provided
-      window.location.href = "/dishes";
     }
   };
 

@@ -1,18 +1,23 @@
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Header } from "@/components/Header";
 import { SearchInput } from "@/components/SearchInput";
 import { TagFilterCombobox } from "@/components/TagFilterCombobox";
 import { DishList } from "@/components/DishList";
 import { Pagination } from "@/components/Pagination";
 import { EmptyState } from "@/components/EmptyState";
 import { FormMessage } from "@/components/FormMessage";
+import { DishEditorOverlay } from "@/components/DishEditorOverlay";
+import { FAB } from "@/components/FAB";
 import { useDishListFilters } from "@/components/hooks/useDishListFilters";
 import { useDebouncedValue } from "@/components/hooks/useDebouncedValue";
+import { useAddDishDialog } from "@/components/hooks/useAddDishDialog";
 import type { DishListResponse, TagListItemDTO, TagListResponse } from "@/types";
 
 export function DishesView() {
   const { filters, updateFilters, resetFilters } = useDishListFilters();
   const debouncedSearch = useDebouncedValue(filters.q, 400);
+  const { isOpen: isAddDishOpen, open: openAddDish, close: closeAddDish } = useAddDishDialog();
 
   const [dishes, setDishes] = useState<DishListResponse | null>(null);
   const [tags, setTags] = useState<TagListItemDTO[]>([]);
@@ -134,39 +139,54 @@ export function DishesView() {
   }, []);
 
   const handleAddNew = useCallback(() => {
-    window.location.href = "/dishes/new";
-  }, []);
+    openAddDish();
+  }, [openAddDish]);
+
+  // Refetch dishes when a new dish is added
+  const handleDishAdded = useCallback(() => {
+    // Refetch dishes list
+    const params = new URLSearchParams({
+      page: String(filters.page),
+      pageSize: String(filters.pageSize),
+      sort: filters.sort,
+    });
+
+    if (debouncedSearch) {
+      params.set("q", debouncedSearch);
+    }
+
+    filters.tagIds.forEach((tagId) => {
+      params.append("tagId", tagId);
+    });
+
+    fetch(`/api/dishes?${params.toString()}`)
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+      })
+      .then((data: DishListResponse) => {
+        if (data) {
+          setDishes(data);
+        }
+      })
+      .catch((error) => {
+        console.error("Error refetching dishes:", error);
+      });
+  }, [filters.page, filters.pageSize, filters.sort, filters.tagIds, debouncedSearch]);
 
   const hasFilters = !!filters.q || filters.tagIds.length > 0;
   const isEmpty = dishes && dishes.data.length === 0;
   const hasNoData = !isLoadingDishes && isEmpty;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col">
+      <Header currentPath="/dishes" />
+
       <div className="container mx-auto max-w-4xl px-4 py-8">
-        {/* Header */}
+        {/* Page Title and Filters */}
         <div className="mb-8">
-          <div className="mb-4 flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Baza dań</h1>
-            <Button asChild>
-              <a href="/">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-4"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                Strona główna
-              </a>
-            </Button>
-          </div>
+          <h1 className="text-3xl font-bold mb-4">Baza dań</h1>
 
           {/* Filters */}
           <div className="space-y-4">
@@ -260,23 +280,9 @@ export function DishesView() {
           </>
         )}
 
-        {/* Floating Action Button */}
-        <Button
-          size="lg"
-          onClick={handleAddNew}
-          className="fixed bottom-8 right-8 size-14 rounded-full shadow-lg"
-          aria-label="Dodaj nowe danie"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className="size-6"
-            aria-hidden="true"
-          >
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
-        </Button>
+        <DishEditorOverlay mode="create" isOpen={isAddDishOpen} onClose={closeAddDish} onSuccess={handleDishAdded} />
+
+        <FAB onClick={handleAddNew} label="Dodaj danie" />
       </div>
     </div>
   );
