@@ -162,6 +162,8 @@ export interface DishSummaryDTO {
 }
 
 export interface DishWithTagsDTO extends DishSummaryDTO {
+  recipeText: DishRow["recipe_text"];
+  url: DishRow["url"];
   tags: TagDTO[];
 }
 

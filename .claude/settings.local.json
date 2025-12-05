@@ -10,7 +10,8 @@
       "Bash(npx astro check:*)",
       "Bash(npx eslint:*)",
       "Bash(npm install:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []
