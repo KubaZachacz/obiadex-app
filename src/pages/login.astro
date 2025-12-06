@@ -8,7 +8,10 @@ import { LoginForm } from "@/components/LoginForm";
   <AuthPageLayout
     title="Zaloguj się"
     subtitle="Wprowadź swoje dane aby uzyskać dostęp do konta"
-    secondaryLinks={[{ href: "/signup", label: "Nie masz konta? Załóż konto" }]}
+    secondaryLinks={[
+      { href: "/reset-password", label: "Zapomniałeś hasła?" },
+      { href: "/signup", label: "Nie masz konta? Załóż konto" },
+    ]}
   >
     <LoginForm client:load />
   </AuthPageLayout>

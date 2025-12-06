@@ -50,8 +50,8 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
       return "Hasło jest wymagane";
     }
 
-    if (formState.password.length < 6) {
-      return "Hasło musi mieć co najmniej 6 znaków";
+    if (formState.password.length < 8) {
+      return "Hasło musi mieć co najmniej 8 znaków";
     }
 
     // Check for spaces in password (common security issue)
@@ -202,7 +202,7 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
             aria-invalid={formState.error ? "true" : "false"}
             className="w-full"
           />
-          <p className="text-xs text-muted-foreground">Minimum 6 znaków</p>
+          <p className="text-xs text-muted-foreground">Minimum 8 znaków</p>
         </div>
       </div>
 

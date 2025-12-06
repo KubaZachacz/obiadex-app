@@ -46,8 +46,8 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
       return "Hasło jest wymagane";
     }
 
-    if (formState.password.length < 6) {
-      return "Hasło musi mieć co najmniej 6 znaków";
+    if (formState.password.length < 8) {
+      return "Hasło musi mieć co najmniej 8 znaków";
     }
 
     return null;

@@ -118,7 +118,12 @@ export async function getByDay(supabase: SupabaseClient, userId: string, day: st
     throw error;
   }
 
-  const dish = data.dishes as unknown as { id: string; name: string; recipe_text: string | null; url: string | null } | null;
+  const dish = data.dishes as unknown as {
+    id: string;
+    name: string;
+    recipe_text: string | null;
+    url: string | null;
+  } | null;
 
   if (!dish) {
     throw new Error("Day plan has no associated dish");

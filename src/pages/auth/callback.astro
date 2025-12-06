@@ -1,0 +1,45 @@
+---
+import Layout from "@/layouts/Layout.astro";
+
+export const prerender = false;
+
+// Handle auth callback from Supabase (email confirmation, password reset, etc.)
+const supabase = Astro.locals.supabase;
+const url = new URL(Astro.request.url);
+
+// Extract code from URL params
+const code = url.searchParams.get("code");
+const next = url.searchParams.get("next") ?? "/";
+const error = url.searchParams.get("error");
+const errorDescription = url.searchParams.get("error_description");
+
+// Handle error from Supabase
+if (error) {
+  console.error("Auth callback error:", error, errorDescription);
+  // Redirect to login with error message
+  return Astro.redirect(`/login?error=${encodeURIComponent(errorDescription || error)}`);
+}
+
+// Exchange code for session
+if (code) {
+  const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (exchangeError) {
+    console.error("Error exchanging code for session:", exchangeError);
+    return Astro.redirect(`/login?error=${encodeURIComponent("Nie udało się zalogować. Spróbuj ponownie.")}`);
+  }
+
+  // Success - redirect to protected page
+  return Astro.redirect(next);
+}
+
+// No code provided - redirect to login
+return Astro.redirect("/login");
+---
+
+<Layout title="Przekierowywanie...">
+  <div class="container mx-auto px-4 py-16 text-center">
+    <h1 class="text-2xl font-bold mb-4">Przekierowywanie...</h1>
+    <p class="text-muted-foreground">Proszę czekać...</p>
+  </div>
+</Layout>
