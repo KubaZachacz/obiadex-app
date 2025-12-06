@@ -5,11 +5,11 @@ export interface DishListFilters {
   tagIds: string[];
   page: number;
   pageSize: number;
-  sort: "created_desc" | "name_asc" | "usage_prio";
+  sort: "created_desc" | "created_asc" | "name_asc" | "name_desc" | "last_used_asc" | "last_used_desc";
 }
 
 const DEFAULT_PAGE_SIZE = 20;
-const DEFAULT_SORT = "created_desc";
+const DEFAULT_SORT = "name_asc";
 
 /**
  * Hook for managing dish list filters with URL query parameter synchronization.

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DayPlanDTO } from "@/types";
 import { useDishPicker } from "@/components/hooks/useDishPicker";
 import { TagCreatableCombobox } from "./TagCreatableCombobox";
@@ -48,9 +48,14 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const isOpen = day !== null;
 
-  const { state, allTags, isLoadingTags, selectDish, setSelectedTags, setNameSearch, saveDayPlan } = useDishPicker(
-    day || ""
-  );
+  const { state, allTags, isLoadingTags, selectDish, setSelectedTags, setNameSearch, saveDayPlan, refetchDishes } =
+    useDishPicker(day || "");
+  const latestRefetchDishes = useRef(refetchDishes);
+
+  // Keep the refetch function reference up to date without retriggering other effects
+  useEffect(() => {
+    latestRefetchDishes.current = refetchDishes;
+  }, [refetchDishes]);
 
   // Fetch existing day plan when overlay opens
   useEffect(() => {
@@ -87,6 +92,8 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
     };
 
     fetchDayPlan();
+    // Refetch dishes when overlay opens
+    latestRefetchDishes.current();
   }, [day]);
 
   // Detect mobile viewport
@@ -104,6 +111,8 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
   const handleSave = async () => {
     const success = await saveDayPlan();
     if (success) {
+      // Refetch dishes after saving to update last used info
+      refetchDishes();
       onSaved();
       onClose();
     }

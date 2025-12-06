@@ -75,7 +75,7 @@ export function useDishPicker(day: string): UseDishPickerReturn {
         setState((prev) => ({ ...prev, status: "loading", error: undefined }));
 
         const params = new URLSearchParams({
-          sort: "usage_prio",
+          sort: "last_used_asc",
           page: "1",
           pageSize: "50",
         });

@@ -75,7 +75,7 @@ export const dishListQuerySchema = z.object({
     .union([z.string().uuid(), z.array(z.string().uuid())])
     .transform((val) => (Array.isArray(val) ? val : [val]))
     .optional(),
-  sort: z.enum(["created_desc", "name_asc", "usage_prio"]).optional().default("created_desc"),
+  sort: z.enum(["created_desc", "created_asc", "name_asc", "name_desc", "last_used_asc", "last_used_desc"]).optional().default("name_asc"),
 });
 
 /**

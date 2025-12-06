@@ -194,9 +194,9 @@ export function DishesView() {
             />
 
             <TagFilterCombobox
-              value={filters.tagIds}
-              onChange={(tagIds) => updateFilters({ tagIds })}
-              options={tags}
+              value={tags.filter((tag) => filters.tagIds.includes(tag.id))}
+              onChange={(selectedTags) => updateFilters({ tagIds: selectedTags.map((tag) => tag.id) })}
+              allTags={tags}
               isLoading={isLoadingTags}
             />
 

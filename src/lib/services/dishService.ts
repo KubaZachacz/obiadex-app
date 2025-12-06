@@ -73,7 +73,7 @@ async function logEvent(
     await supabase.from("events").insert({
       user_id: userId,
       event_type: eventType,
-      payload,
+      payload: payload as never,
     });
   } catch (error) {
     // Log error but don't throw - events are non-critical
@@ -128,7 +128,7 @@ interface ListOptions {
   pageSize: number;
   q?: string;
   tagId?: string[];
-  sort: "created_desc" | "name_asc" | "usage_prio";
+  sort: "created_desc" | "created_asc" | "name_asc" | "name_desc" | "last_used_asc" | "last_used_desc";
 }
 
 /**
@@ -190,10 +190,14 @@ export async function list(
   // Apply sorting
   if (sort === "created_desc") {
     query = query.order("created_at", { ascending: false });
+  } else if (sort === "created_asc") {
+    query = query.order("created_at", { ascending: true });
   } else if (sort === "name_asc") {
     query = query.order("name", { ascending: true });
+  } else if (sort === "name_desc") {
+    query = query.order("name", { ascending: false });
   }
-  // usage_prio will be handled separately below
+  // last_used_asc and last_used_desc will be handled separately below
 
   // Apply pagination
   query = query.range(offset, offset + pageSize - 1);
@@ -219,9 +223,9 @@ export async function list(
   const dishIds = dishes.map((dish) => dish.id);
   const tagsByDish = await dishTagService.getTagsForDishes(supabase, userId, dishIds);
 
-  // Get last used day for usage_prio sorting
+  // Get last used day for last_used_* sorting
   let lastUsedByDish: Map<string, string | null> | undefined;
-  if (sort === "usage_prio") {
+  if (sort === "last_used_asc" || sort === "last_used_desc") {
     const { data: dayPlans, error: dayPlanError } = await supabase
       .from("day_plans")
       .select("dish_id, day")
@@ -257,7 +261,7 @@ export async function list(
       tags: tagsByDish.get(dish.id) ?? [],
     };
 
-    if (sort === "usage_prio") {
+    if (sort === "last_used_asc" || sort === "last_used_desc") {
       return {
         ...base,
         lastUsedDay: lastUsedByDish?.get(dish.id) ?? null,
@@ -267,19 +271,20 @@ export async function list(
     return base;
   });
 
-  // Sort by usage priority if needed (client-side after DB query)
-  if (sort === "usage_prio" && lastUsedByDish) {
+  // Sort by last usage if needed (client-side after DB query)
+  if ((sort === "last_used_asc" || sort === "last_used_desc") && lastUsedByDish) {
     items = items.sort((a, b) => {
-      const aDay = a.lastUsedDay;
-      const bDay = b.lastUsedDay;
+      const aDay = a.lastUsedDay ?? null;
+      const bDay = b.lastUsedDay ?? null;
 
-      // Nulls (never used) come last
+      // For ascending (oldest first): nulls (never used) come last
+      // For descending (newest first): nulls (never used) come first
       if (aDay === null && bDay === null) return 0;
-      if (aDay === null) return 1;
-      if (bDay === null) return -1;
+      if (aDay === null) return sort === "last_used_asc" ? 1 : -1;
+      if (bDay === null) return sort === "last_used_asc" ? -1 : 1;
 
-      // Oldest usage first
-      return aDay.localeCompare(bDay);
+      // Compare dates (both are non-null at this point, TypeScript doesn't know this)
+      return sort === "last_used_asc" ? aDay.localeCompare(bDay) : bDay.localeCompare(aDay);
     });
   }
 

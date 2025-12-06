@@ -7,9 +7,17 @@ interface FormMessageProps {
   onClose?: () => void;
   autoHide?: boolean;
   autoHideDuration?: number;
+  className?: string;
 }
 
-export function FormMessage({ status, message, onClose, autoHide = false, autoHideDuration = 5000 }: FormMessageProps) {
+export function FormMessage({
+  status,
+  message,
+  onClose,
+  autoHide = false,
+  autoHideDuration = 5000,
+  className,
+}: FormMessageProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -102,7 +110,7 @@ export function FormMessage({ status, message, onClose, autoHide = false, autoHi
     <div
       role="alert"
       aria-live={config.ariaLive}
-      className={cn("flex items-start gap-3 rounded-md border p-4", config.bgColor, config.borderColor)}
+      className={cn("flex items-start gap-3 rounded-md border p-4", config.bgColor, config.borderColor, className)}
     >
       <div className={cn("mt-0.5", config.textColor)}>{config.icon}</div>
       <div className={cn("flex-1 text-sm", config.textColor)}>{message}</div>

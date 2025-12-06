@@ -114,7 +114,7 @@ export interface DishDTO {
 
 export interface DishListItemDTO extends DishDTO {
   /**
-   * Present only when sort=usage_prio.
+   * Present only when sort=last_used_asc or sort=last_used_desc.
    */
   lastUsedDay?: DayPlanRow["day"] | null;
 }
