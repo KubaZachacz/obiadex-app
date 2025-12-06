@@ -32,8 +32,14 @@ export async function GET(context: APIContext): Promise<Response> {
     }
 
     // Parse and validate query parameters
+    // Preserve repeated tagId parameters (AND filtering) instead of letting Object.fromEntries drop them
     const url = new URL(context.request.url);
-    const queryParams = Object.fromEntries(url.searchParams.entries());
+    const searchParams = url.searchParams;
+    const queryParams: Record<string, unknown> = Object.fromEntries(searchParams.entries());
+    const tagIds = searchParams.getAll("tagId");
+    if (tagIds.length > 0) {
+      queryParams.tagId = tagIds;
+    }
 
     const validationResult = dishListQuerySchema.safeParse(queryParams);
     if (!validationResult.success) {
