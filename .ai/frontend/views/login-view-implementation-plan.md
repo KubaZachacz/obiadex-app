@@ -9,9 +9,10 @@ Widok logowania umożliwia uwierzytelnienie użytkownika przed dostępem do list
 - Niezalogowani kierowani tutaj przez middleware/SSR.
 
 ## 3. Struktura komponentów
+- `Layout.astro` → wspólny layout Astro.
 - `AuthPageLayout` → shell z tytułem, krótkim opisem i linkiem do `/signup`.
-- `AuthForm(Login)` → formularz z polami `email`, `password`, CTA "Zaloguj się", sekcją komunikatów.
-- `FormMessage/Toast` → informacja o błędach (401/422) i sukcesie.
+- `LoginForm` → formularz z polami `email`, `password`, CTA "Zaloguj się", sekcją komunikatów.
+- `FormMessage` → informacja o błędach (401/422) i sukcesie.
 
 ## 4. Szczegóły komponentów
 ### AuthPageLayout
@@ -22,13 +23,13 @@ Widok logowania umożliwia uwierzytelnienie użytkownika przed dostępem do list
 - Typy: żadnych własnych; przekazuje children.
 - Propsy: `title: string`, `subtitle?: string`, `children: ReactNode`, `secondaryLink: { href: string; label: string }[]`.
 
-### AuthForm(Login)
+### LoginForm
 - Opis: obsługuje wpis e-mail/hasło, walidacje klienta, wywołanie `/api/auth/login`.
 - Elementy: `Input(email)`, `Input(password type=password)`, `Button`, `FormMessage`.
 - Interakcje: submit (POST), focus management, enter to submit.
 - Walidacja: email format, hasło min 6? (jeśli PRD nie wymaga, zostaw tylko required). Błędy serwera mapowane na komunikaty ogólne ("Nieprawidłowe dane logowania").
 - Typy: `AuthLoginCommand`, `AuthLoginResponse` z `src/types.ts`.
-- Propsy: `onSuccess?: () => void` (domyślnie redirect), `defaultEmail?: string`.
+- Propsy: brak (komponent zarządza własnym stanem i redirectem).
 
 ### FormMessage/Toast
 - Opis: jednolity komponent statusu.

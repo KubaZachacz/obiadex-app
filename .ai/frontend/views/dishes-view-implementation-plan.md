@@ -9,13 +9,15 @@ Widok `/dishes` prezentuje listę dań z paginacją, wyszukiwaniem i filtrowanie
 - Parametry query: `page`, `pageSize`, `q`, `tagId[]`, `sort=created_desc|name_asc` (domyślnie `created_desc`).
 
 ## 3. Struktura komponentów
-- `AppShell` (nagłówek, link back do `/`).
+- `Layout.astro` + `Header` (nagłówek, link back do `/`).
+- `DishesView` → główny komponent widoku zarządzający stanem listy, filtrów i overlayów.
 - `SearchInput` z debounce do `q`.
 - `TagFilterCombobox` (AND) pobierający tagi.
 - `DishList` z elementami `DishListItem` i `Pagination`.
-- `FAB(+)` → `/dishes/new`.
+- `DishEditorOverlay` → overlay dodawania/edycji dania.
+- `FAB(+)` → otwiera `DishEditorOverlay` w trybie "create".
 - `EmptyState` + CTA przy braku danych/wyników.
-- `InlineError/Toast` dla błędów API.
+- `FormMessage/InlineError` dla błędów API.
 
 ## 4. Szczegóły komponentów
 ### SearchInput
@@ -80,7 +82,9 @@ Widok `/dishes` prezentuje listę dań z paginacją, wyszukiwaniem i filtrowanie
 - API errors: toast + opcja ponów.
 
 ## 11. Kroki implementacji
-1) Skonfigurować trasę `/dishes` z `AppShell`.
-2) Dodać `useDishListFilters` i wywołania `/api/dishes` + `/api/tags` (includeCounts).
-3) Zaimplementować `SearchInput`, `TagFilterCombobox`, `DishList`, `Pagination` z synchronizacją query params.
-4) Obsłużyć empty state i błędy; dodać FAB + linki edycji otwierające nakładkę.
+1) Skonfigurować trasę `/dishes` z `Layout.astro` i `Header`.
+2) Zaimplementować `DishesView` jako główny komponent zarządzający stanem.
+3) Dodać `useDishListFilters` i wywołania `/api/dishes` + `/api/tags` (includeCounts).
+4) Zaimplementować `SearchInput`, `TagFilterCombobox`, `DishList`, `Pagination` z synchronizacją query params.
+5) Dodać `DishEditorOverlay` i integrację z FAB oraz linkami edycji.
+6) Obsłużyć empty state i błędy; dodać callback `onSuccess` do refetch po dodaniu/edycji dania.

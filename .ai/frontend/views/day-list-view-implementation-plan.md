@@ -18,11 +18,12 @@ Widok home prezentuje tygodniowy układ dni (paginowany), z możliwością prze�
 
 ## 3. Struktura komponentów
 
-- `AppShell` (nagłówek, link do `/dishes`, menu użytkownika).
-- `WeekNavigator` → pasek nawigacji tygodnia (przyciski „←” / „→”, etykieta zakresu dat tygodnia; na mobile nasłuch gestów swipe).
-- `DayWeekView` → prezentacja bieżącego tygodnia (desktop pełne 7 dni; mobile z opcjonalnym poszerzonym buforem ±2 dni zgodnie z konfiguracją).
+- `Layout.astro` + `Header` (nagłówek, link do `/dishes`, menu użytkownika, responsywny hamburger menu).
+- `HomeView` → główny komponent widoku home, zarządza stanem tygodniowym, overlayami i routingiem.
+- `WeekNavigator` → pasek nawigacji tygodnia (przyciski „←" / „→", etykieta zakresu dat tygodnia; na mobile nasłuch gestów swipe).
+- `DayWeekView` → prezentacja tygodni w układzie siatki (desktop: 3 tygodnie w 3 kolumnach, mobile: 1 tydzień w kolumnie; prefetch ±1 tydzień desktop, ±2 dni mobile).
 - `DayCard` → kafel dnia z datą, nazwą dania lub CTA.
-- `FAB(+)` → otwarcie formularza dodawania dania (`/dishes/new`, nakładka).
+- `FAB(+)` → otwarcie overlayu dodawania dania (`DishEditorOverlay`).
 - `InlineError/Toast` → komunikaty błędów ładowania.
 - `EmptyState` → gdy brak planów lub dane niezaładowane.
 
@@ -38,12 +39,12 @@ Widok home prezentuje tygodniowy układ dni (paginowany), z możliwością prze�
 
 ### DayWeekView
 
-- Opis: oblicza zakres dat dla tygodnia wskazanego przez `weekIndex` oraz rozszerza zakres o konfigurowalne offsety (desktop: ±1 tydzień; mobile: ±2 dni) dla płynnego UX i prefetchu.
-- Elementy: siatka/strip dni tygodnia (pon–niedz zgodnie z lokalizacją), placeholdery podczas ładowania, wyróżnienie dzisiejszego dnia.
-- Interakcje: kliknięcie kafla → otwarcie nakładki dnia z parametrem.
+- Opis: wyświetla tygodnie w układzie siatki; desktop pokazuje 3 tygodnie (21 dni) w 3 kolumnach, mobile pokazuje 1 tydzień w kolumnie. Otrzymuje już obliczony zakres prefetch z `useWeekViewport`.
+- Elementy: siatka dni tygodnia (pon–niedz zgodnie z lokalizacją), placeholdery podczas ładowania, wyróżnienie dzisiejszego dnia, przyciemnienie dni spoza bieżącego tygodnia.
+- Interakcje: kliknięcie kafla → otwarcie nakładki dnia z parametrem `?day=YYYY-MM-DD`.
 - Walidacja: daty `YYYY-MM-DD`; pilnować rozsądnego zakresu zapytania.
-- Typy: `DayPlanListItemDTO`, `DayPlanRangeResponse`, `DayPlanRangeQuery` z `src/types.ts`.
-- Propsy: `weekIndex: number`, `onSelectDay(day: string)`, `onError(message: string)`.
+- Typy: `DayPlanListItemDTO`, `DayPlanRangeResponse`, `WeekViewport` z `src/types.ts`.
+- Propsy: `viewport: WeekViewport`, `dayPlans: Record<string, DayPlanListItemDTO>`, `isLoading: boolean`, `onSelectDay(day: string)`.
 
 ### DayCard
 
@@ -56,12 +57,12 @@ Widok home prezentuje tygodniowy układ dni (paginowany), z możliwością prze�
 
 ### FAB
 
-- Opis: pływający przycisk; na `/` otwiera `/dishes/new` (routowalna nakładka). Przypisanie dania do dnia odbywa się wyłącznie po kliknięciu kafla dnia.
-- Elementy: button z ikoną `+`.
+- Opis: pływający przycisk; na `/` otwiera overlay `DishEditorOverlay` w trybie "create". Przypisanie dania do dnia odbywa się wyłącznie po kliknięciu kafla dnia.
+- Elementy: button z ikoną `+` i etykietą "Dodaj danie".
 - Interakcje: klik → `onClick()`; klawiatura.
 - Walidacja: brak.
 - Typy: żadnych specjalnych.
-- Propsy: `onClick: () => void`.
+- Propsy: `onClick: () => void`, `label: string`.
 
 ## 5. Typy
 
@@ -72,8 +73,9 @@ Widok home prezentuje tygodniowy układ dni (paginowany), z możliwością prze�
 
 ## 6. Zarządzanie stanem
 
+- `HomeView` zarządza stanem `selectedDay` (synchronizacja z URL query param `?day=YYYY-MM-DD`), stanem overlayów (`DayPlanOverlay`, `DishEditorOverlay`).
 - Lokalny hook `useWeekViewport` zarządza `weekIndex`, detekcją wariantu (desktop/mobile) i wylicza `visibleStart/visibleEnd` oraz prefetchowe `prefetchStart/prefetchEnd` na podstawie stałych offsetów.
-- Hook utrzymuje cache `day -> DayPlanListItemDTO`; przy zmianie `weekIndex` wykonuje fetch `GET /api/day-plans` dla złożonego zakresu (visible + prefetch) z abort controller i debounce.
+- Hook utrzymuje cache `day -> DayPlanListItemDTO` jako `Record<string, DayPlanListItemDTO>`; przy zmianie `weekIndex` wykonuje fetch `GET /api/day-plans` dla złożonego zakresu (prefetch) z abort controller i debounce (300ms).
 - Stałe konfiguracyjne (np. `src/lib/date/constants.ts`):
   - `WEEK_NAV_OFFSETS = { desktop: { prevWeeks: 1, nextWeeks: 1 }, mobile: { prevDays: 2, nextDays: 2 } }`
 - Start tygodnia zgodnie z lokalizacją (PL: poniedziałek).
@@ -107,9 +109,10 @@ Widok home prezentuje tygodniowy układ dni (paginowany), z możliwością prze�
 ## 11. Kroki implementacji
 
 1. Dodać stałe `WEEK_NAV_OFFSETS` (desktop/mobile) i pomocnicze utilsy dat (`startOfWeek`, `endOfWeek`, przesunięcia).
-2. Zaimplementować hook `useWeekViewport` (weekIndex, zakresy visible/prefetch, cache, fetch).
-3. Zbudować `WeekNavigator` (przyciski ±1, label, obsługa swipe na mobile).
-4. Zbudować `DayWeekView` (siatka/strip tygodnia, highlight „Dzisiaj”, placeholdery).
-5. Dodać `DayCard` renderujący datę/danie i CTA.
-6. Dodać FAB i nawigację do `/dishes/new` (nakładka) bez resetu `weekIndex`.
-7. Zintegrować komunikaty błędów i empty state; ręcznie sprawdzić 401/422.
+2. Zaimplementować hook `useWeekViewport` (weekIndex, zakresy visible/prefetch, cache, fetch z debounce).
+3. Zbudować `HomeView` jako główny komponent zarządzający stanem tygodniowym i overlayami.
+4. Zbudować `WeekNavigator` (przyciski ±1, label, obsługa swipe na mobile).
+5. Zbudować `DayWeekView` (siatka tygodni: desktop 3 kolumny, mobile 1 kolumna, highlight „Dzisiaj", placeholdery).
+6. Dodać `DayCard` renderujący datę/danie i CTA.
+7. Dodać FAB i overlay `DishEditorOverlay` bez resetu `weekIndex`.
+8. Zintegrować komunikaty błędów i empty state; ręcznie sprawdzić 401/422.

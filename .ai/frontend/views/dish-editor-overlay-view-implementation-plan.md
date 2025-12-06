@@ -4,15 +4,17 @@
 Routowalny dialog/drawer (`/dishes/new`, `/dishes/:id/edit`) umożliwia tworzenie i edycję dań wraz z tagami. Walidacje zgodne z PRD (name 3–80, tag 2–30, recipe_text ≤2000, url ≤255). Wykorzystuje `/api/dishes` (POST/PUT/GET), `/api/tags` oraz integruje usuwanie tagu (DELETE `/api/tags/{id}`) po odpięciu w multi-select.
 
 ## 2. Routing widoku
-- Ścieżki: `/dishes/new`, `/dishes/:id/edit` (nakładka na `/dishes` lub wywołana z nakładki dnia).
-- Zamknięcie: powrót do `/dishes` lub poprzedniego URL, bez reloadu.
+- Komponent: `DishEditorOverlay` - overlay otwierany z FAB lub kontekstowo.
+- Trasa edycji: `/dishes/[dishId]/edit.astro` - strona Astro która automatycznie otwiera overlay w trybie "edit".
+- Zamknięcie: zamyka overlay, powrót do poprzedniego widoku bez reloadu.
 
 ## 3. Struktura komponentów
-- `Dialog/Drawer` z nagłówkiem (Dodaj/Edytuj danie) i przyciskiem zamknięcia.
+- `DishEditorOverlay` → główny komponent overlayu zarządzający stanem otwarcia/zamknięcia.
+- `Dialog` z nagłówkiem (Dodaj/Edytuj danie) i przyciskiem zamknięcia (tylko Dialog, nie Drawer).
 - `DishForm` (react-hook-form + zod) zawierający pola: `name`, `tags[]` (creatable), `recipe_text` (textarea), `url` (input type=url).
 - `TagCreatableCombobox` z możliwością usuwania tagu (global delete) i normalizacją do lowercase.
 - `FormMessage/Toast` dla błędów 409/422/404/429.
-- `Footer` z przyciskami `Zapisz` i `Anuluj`.
+- `Footer` z przyciskami `Zapisz` i `Anuluj` (wewnątrz `DishForm`).
 
 ## 4. Szczegóły komponentów
 ### DishForm
@@ -65,8 +67,9 @@ Routowalny dialog/drawer (`/dishes/new`, `/dishes/:id/edit`) umożliwia tworzeni
 - 429/5xx: toast + opcja "Spróbuj ponownie".
 
 ## 11. Kroki implementacji
-1) Utworzyć routowalne nakładki `/dishes/new` i `/dishes/:id/edit` z Dialog/Drawer, pamiętając o focus trap i zamykaniu do `/dishes`.
-2) Zaimplementować `DishForm` z Zod + react-hook-form, polami i helperami limitów.
-3) Dodać integrację tagów (create + delete) w `TagCreatableCombobox` z normalizacją do lowercase i confirm przed DELETE.
-4) Podłączyć POST/PUT/GET endpointy; mapować DTO do `tagNames`/`tagIds`; obsłużyć komunikaty błędów.
-5) Na sukces emitować refetch listy dań i (jeśli otwarta) nakładki dnia; dodać ręczne QA scenariuszy walidacji.
+1) Utworzyć komponent `DishEditorOverlay` z Dialog, pamiętając o focus trap i zamykaniu.
+2) Utworzyć stronę `/dishes/[dishId]/edit.astro` która renderuje `DishesView` i automatycznie otwiera `DishEditorOverlay` w trybie "edit".
+3) Zaimplementować `DishForm` z Zod + react-hook-form, polami i helperami limitów.
+4) Dodać integrację tagów (create + delete) w `TagCreatableCombobox` z normalizacją do lowercase i confirm przed DELETE.
+5) Podłączyć POST/PUT/GET endpointy; mapować DTO do `tagNames`/`tagIds`; obsłużyć komunikaty błędów.
+6) Na sukces emitować callback `onSuccess` do refetch listy dań i (jeśli otwarta) nakładki dnia; dodać ręczne QA scenariuszy walidacji.

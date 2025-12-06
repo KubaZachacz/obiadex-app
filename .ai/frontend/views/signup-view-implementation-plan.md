@@ -8,18 +8,19 @@ Widok rejestracji tworzy konto w oparciu o Supabase Auth via `/api/auth/signup`,
 - Po sukcesie: redirect do `/login` (lub `/` przy auto-loginie).
 
 ## 3. Struktura komponentów
+- `Layout.astro` → wspólny layout Astro.
 - `AuthPageLayout` (reuse z logowania) z linkiem powrotnym do `/login`.
-- `AuthForm(Signup)` z polami `email`, `password`, zgody (opcjonalnie), CTA "Załóż konto".
-- `FormMessage/Toast` dla błędów/confirmacji.
+- `SignupForm` z polami `email`, `password`, zgody (opcjonalnie), CTA "Załóż konto".
+- `FormMessage` dla błędów/confirmacji.
 
 ## 4. Szczegóły komponentów
-### AuthForm(Signup)
+### SignupForm
 - Opis: Formularz tworzący konto; waliduje dane, pokazuje błędy 409/422 z API.
 - Elementy: `Input(email)`, `Input(password type=password)`, `Button`, `FormMessage`, link do logowania.
 - Interakcje: submit -> POST `/api/auth/signup`, focus na pierwsze pole z błędem.
 - Walidacja: email format, hasło minimalne (zgodnie z polityką Supabase, np. ≥6); required.
 - Typy: `AuthSignupCommand`, `AuthSignupResponse` (`src/types.ts`).
-- Propsy: `onSuccess?: () => void`, `defaultEmail?: string`.
+- Propsy: brak (komponent zarządza własnym stanem i redirectem).
 
 ### FormMessage/Toast
 - Reuse z logowania, statusy success/error.
@@ -49,7 +50,7 @@ Widok rejestracji tworzy konto w oparciu o Supabase Auth via `/api/auth/signup`,
 - 422: pokaż błędy pól; 401/5xx: komunikat ogólny + możliwość retry.
 
 ## 11. Kroki implementacji
-1) Stworzyć stronę `/signup` reuse `AuthPageLayout`.
-2) Zaimplementować `AuthForm(Signup)` z walidacjami i POST do `/api/auth/signup`.
+1) Stworzyć stronę `/signup` z `Layout.astro` i `AuthPageLayout`.
+2) Zaimplementować `SignupForm` z walidacjami i POST do `/api/auth/signup`.
 3) Obsłużyć redirect/komunikat po sukcesie; dołączyć link do `/login`.
 4) Dodać testy ręczne: błędny email, zbyt krótkie hasło, duplikat emaila.

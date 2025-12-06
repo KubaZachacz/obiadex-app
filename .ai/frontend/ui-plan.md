@@ -2,12 +2,12 @@
 
 ## 1. Przegląd struktury UI
 
-Aplikacja webowa dostępna wyłącznie po zalogowaniu. Po uwierzytelnieniu użytkownik trafia na widok „Lista dni” (home) z nieskończonym przewijaniem w przód i w tył. Wybór/zmiana dania dla konkretnego dnia odbywa się w routowalnej nakładce (Dialog/Drawer) otwieranej z listy dni. Zarządzanie daniami odbywa się w widoku „Baza dań” z paginacją, wyszukiwaniem po nazwie i filtrowaniem po tagach (logika AND). Tagi są tworzone w locie i normalizowane do lowercase; usunięcie tagu z komponentu multi‑select skutkuje jego globalnym usunięciem dla użytkownika.
+Aplikacja webowa dostępna wyłącznie po zalogowaniu. Po uwierzytelnieniu użytkownik trafia na widok „Lista dni" (home) z nawigacją tygodniową (poprzedni/następny tydzień). Desktop pokazuje 3 tygodnie (21 dni) w układzie siatki, mobile pokazuje 1 tydzień w kolumnie. Wybór/zmiana dania dla konkretnego dnia odbywa się w routowalnej nakładce (Dialog/Drawer) otwieranej z listy dni, która ma dwa tryby: "view" (szczegóły przypisanego dania) i "edit" (wybór/zmiana dania). Zarządzanie daniami odbywa się w widoku „Baza dań" z paginacją, wyszukiwaniem po nazwie i filtrowaniem po tagach (logika AND). Tagi są tworzone w locie i normalizowane do lowercase; usunięcie tagu z komponentu multi‑select skutkuje jego globalnym usunięciem dla użytkownika.
 
 - Wejściowe trasy: `/login`, `/signup`, opcjonalnie `/reset-password` (jeśli obsługiwane przez Supabase); trasy chronione: `/` (lista dni), `/dishes` (baza dań) z routowalnymi nakładkami.
 - Nakładki routowalne:
-  - Wybór/zmiana dania dla dnia: preferowana forma parametru `?day=YYYY-MM-DD` na trasie `/`.
-  - Dodanie/edycja dania: `/dishes/new`, `/dishes/:id/edit` jako Dialog/Drawer.
+  - Wybór/zmiana dania dla dnia: parametr `?day=YYYY-MM-DD` na trasie `/` (zaimplementowane).
+  - Dodanie/edycja dania: overlay `DishEditorOverlay` otwierany z FAB lub kontekstowo; edycja również przez trasę `/dishes/[dishId]/edit` która automatycznie otwiera overlay.
 - Ochrona tras i izolacja danych: weryfikacja sesji po stronie SSR/middleware; API używa Bearer JWT, RLS w bazie ogranicza dostęp do danych użytkownika.
 - Responsywność: mobile‑first; Dialog (desktop) / Drawer (mobile); dostępny FAB „+” na liście dni i w nakładce dnia.
 - Zgodność z API: widoki i interakcje mapują się na `/auth/*` (opcjonalnie), `/dishes`, `/tags`, `/day-plans`, z obsługą błędów 401/404/409/422/429 i idempotencją dla modyfikacji.
@@ -40,19 +40,21 @@ Aplikacja webowa dostępna wyłącznie po zalogowaniu. Po uwierzytelnieniu użyt
 
 - Nazwa widoku: Lista dni (Home)
   - Ścieżka widoku: `/`
-  - Główny cel: Przegląd i szybkie planowanie jednego dania na każdy dzień w obie strony osi czasu.
-  - Kluczowe informacje do wyświetlenia: Ciąg dni (np. kafle) z datą i przypisanym daniem (jeśli istnieje); stany ładowania; puste dni; link do „Baza dań”.
-  - Kluczowe komponenty widoku: `DayListVirtualized` (infinite scroll, prefetch), `DayCard`, `FAB(+)`, `HeaderNav` (link do `/dishes`), `Toast`/`InlineError`.
-    - Interakcje z API: `GET /day-plans?start&end` do pobierania planów w oknach; otwarcie nakładki wyboru dania; po zapisie `PUT /day-plans/{day}`.
-  - UX, dostępność i względy bezpieczeństwa: wirtualizacja listy; czytelne etykiety dat; klawiszologia dla przewijania; FAB dostępny klawiaturą; 401 powoduje redirect do `/login`.
+  - Główny cel: Przegląd i szybkie planowanie jednego dania na każdy dzień w układzie tygodniowym z nawigacją poprzedni/następny tydzień.
+  - Kluczowe informacje do wyświetlenia: Widok tygodniowy (desktop: 3 tygodnie w siatce, mobile: 1 tydzień w kolumnie); kafle dni z datą i przypisanym daniem (jeśli istnieje); stany ładowania; puste dni; link do „Baza dań".
+  - Kluczowe komponenty widoku: `HomeView`, `WeekNavigator` (nawigacja tygodniowa), `DayWeekView` (wyświetlanie tygodni), `DayCard`, `FAB(+)`, `Header` (link do `/dishes`), `Toast`/`InlineError`.
+    - Interakcje z API: `GET /day-plans?start&end` do pobierania planów w zakresie prefetch (desktop: ±1 tydzień, mobile: ±2 dni); otwarcie nakładki wyboru dania; po zapisie `PUT /day-plans/{day}`.
+  - UX, dostępność i względy bezpieczeństwa: układ siatki tygodniowej; czytelne etykiety dat; nawigacja klawiaturą i gestami (swipe na mobile); FAB dostępny klawiaturą; 401 powoduje redirect do `/login`.
 
 - Nazwa widoku: Nakładka wyboru/zmiany dania dla dnia (Dialog/Drawer)
   - Ścieżka widoku: `/?day=YYYY-MM-DD` (routowalny overlay na trasie `/`)
-  - Główny cel: Wybrać lub zmienić danie ręcznie dla danego dnia.
-  - Kluczowe informacje do wyświetlenia: Data dnia; opcjonalny filtr po tagach (multi‑select); lista dań z sortem „używane rzadziej najpierw”; stan pustej bazy dań z CTA do dodania.
-  - Kluczowe komponenty widoku: `Dialog` (desktop) / `Drawer` (mobile), `TagFilterCombobox (multi-select)`, `DishPickerList (usage_prio)`, `Button(Zapisz)`, `EmptyState`, `FAB(+)` do dodania dania w locie.
-    - Interakcje z API: `GET /dishes?sort=usage_prio&tagId=...`; `GET /tags` do filtra; zapis: `PUT /day-plans/{day}`; CTA dodania otwiera `/dishes/new` (nakładka).
-  - UX, dostępność i względy bezpieczeństwa: focus trap, obsługa klawiatury i roli ARIA; jasny komunikat, gdy brak dań; stabilne sortowanie dla równej daty (po name ASC); użycie `Idempotency-Key` przy zapisie; zamknięcie nakładki zmienia URL bez utraty stanu listy.
+  - Główny cel: Wyświetlić szczegóły przypisanego dania (tryb "view") lub wybrać/zmienić danie ręcznie dla danego dnia (tryb "edit").
+  - Kluczowe informacje do wyświetlenia: 
+    - Tryb "view": szczegóły dania (nazwa, tagi, przepis, URL), przyciski edycji i usunięcia.
+    - Tryb "edit": data dnia; wyszukiwanie po nazwie; filtr po tagach (multi‑select); lista dań z sortem „używane rzadziej najpierw"; stan pustej bazy dań z CTA do dodania.
+  - Kluczowe komponenty widoku: `DayPlanOverlay`, `Dialog` (desktop) / `Drawer` (mobile), `DayPlanDetailsView` (tryb view), `TagCreatableCombobox` (tryb edit), `DishPickerList (usage_prio)` (tryb edit), `Button(Zapisz/Anuluj)`, `EmptyState`, `FAB(+)` do dodania dania w locie.
+    - Interakcje z API: `GET /day-plans/{day}` do sprawdzenia istniejącego planu; `GET /dishes?sort=usage_prio&tagId=...`; `GET /tags` do filtra; zapis: `PUT /day-plans/{day}`; usunięcie: `DELETE /day-plans/{day}`; CTA dodania otwiera overlay tworzenia dania.
+  - UX, dostępność i względy bezpieczeństwa: focus trap, obsługa klawiatury i roli ARIA; automatyczne przełączanie między trybami view/edit; jasny komunikat, gdy brak dań; stabilne sortowanie dla równej daty (po name ASC); użycie `Idempotency-Key` przy zapisie; zamknięcie nakładki zmienia URL bez utraty stanu listy.
 
 - Nazwa widoku: Baza dań
   - Ścieżka widoku: `/dishes`
@@ -62,11 +64,11 @@ Aplikacja webowa dostępna wyłącznie po zalogowaniu. Po uwierzytelnieniu użyt
     - Interakcje z API: `GET /dishes?page&pageSize&q&tagId[]&sort=created_desc`; `GET /tags`; `POST /dishes` (tworzenie) i `PUT /dishes/{id}` (edycja) z invalidacjami listy.
   - UX, dostępność i względy bezpieczeństwa: jasne komunikaty przy braku wyników; multi‑select z wyraźnym oznaczeniem AND; zachowanie paginacji przy nawigacji; 422/409 mapowane do komunikatów.
 
-- Nazwa widoku: Nakładka dodawania/edycji dania (Dialog/Drawer)
-  - Ścieżka widoku: `/dishes/new`, `/dishes/:id/edit` (routowalne nakładki na `/dishes` lub otwierane kontekstowo)
+- Nazwa widoku: Nakładka dodawania/edycji dania (Dialog)
+  - Ścieżka widoku: Overlay `DishEditorOverlay` otwierany z FAB lub kontekstowo; edycja również przez trasę `/dishes/[dishId]/edit` która automatycznie otwiera overlay.
   - Główny cel: Utworzyć lub zaktualizować danie wraz z tagami.
   - Kluczowe informacje do wyświetlenia: Pola: name (wymagane), tags[] (co najmniej 1), recipe_text (opcjonalnie), url (opcjonalnie); walidacje długości; podgląd tagów.
-  - Kluczowe komponenty widoku: `DishForm (react-hook-form + zod)`, `TagCreatableCombobox`, `Textarea`, `Input(url)`, `Button(Zapisz)`, `ConfirmDialog` (przy globalnym usunięciu tagu), `Toast`/`InlineError`.
+  - Kluczowe komponenty widoku: `DishEditorOverlay`, `DishForm (react-hook-form + zod)`, `TagCreatableCombobox`, `Textarea`, `Input(url)`, `Button(Zapisz)`, `ConfirmDialog` (przy globalnym usunięciu tagu), `Toast`/`InlineError`.
     - Interakcje z API: tworzenie `POST /dishes` (emituje `dish_added`), edycja `PUT /dishes/{id}`; zarządzanie tagami: `POST /tags` (creatable), globalne usunięcie: `DELETE /tags/{id}`.
   - UX, dostępność i względy bezpieczeństwa: walidacje inline (name 3–80, tag 2–30, recipe_text ≤2000, url ≤255); normalizacja tagów do lowercase; przy usuwaniu tagu, jeśli `dishCount>0`, pokazuj potwierdzenie; formularz dostępny klawiaturą, czytelne opisy błędów.
 
@@ -74,8 +76,8 @@ Aplikacja webowa dostępna wyłącznie po zalogowaniu. Po uwierzytelnieniu użyt
 
 - Główny przypadek użycia: Planowanie dnia
   1. Użytkownik loguje się (`/login`).
-  2. Trafia na `/` i przewija listę dni; aplikacja dociąga okna dat (`GET /day-plans?start&end`).
-  3. Klika wybrany dzień → otwiera się nakładka z listą dań (sort `usage_prio`) i filtrem tagów (`GET /dishes`, `GET /tags`).
+  2. Trafia na `/` z widokiem tygodniowym; aplikacja dociąga okna dat (`GET /day-plans?start&end`) w zakresie prefetch.
+  3. Klika wybrany dzień → otwiera się nakładka w trybie "view" (jeśli plan istnieje) lub "edit" (jeśli nie); w trybie edit lista dań (sort `usage_prio`) i filtr tagów (`GET /dishes`, `GET /tags`).
   4. Opcjonalnie zawęża po tagach; wybiera danie; zapisuje (`PUT /day-plans/{day}` z `Idempotency-Key`).
   5. Widok `/` odświeża się; wybrane danie jest widoczne na kaflu dnia; event `day_planned` zarejestrowany po stronie serwera.
 
@@ -92,8 +94,9 @@ Aplikacja webowa dostępna wyłącznie po zalogowaniu. Po uwierzytelnieniu użyt
   4. W formularzu może usunąć tag z multi‑selecta; jeśli tag ma powiązania, pokazuje się potwierdzenie; po akceptacji `DELETE /tags/{id}` odcina tag globalnie.
 
 - Zmiana przypisanego dania
-  1. Z listy dni otwiera nakładkę dnia.
-  2. Wybiera inne danie z listy; zapis (`PUT /day-plans/{day}`) nadpisuje poprzedni wybór; lista dni aktualizuje kartę.
+  1. Z listy dni otwiera nakładkę dnia (tryb "view").
+  2. Klika "Zmień danie" → przełącza do trybu "edit".
+  3. Wybiera inne danie z listy; zapis (`PUT /day-plans/{day}`) nadpisuje poprzedni wybór; lista dni aktualizuje kartę.
 
 - Błędy i przypadki brzegowe
   - 401: redirect do `/login` (SSR i/lub po odpowiedzi API).
@@ -115,7 +118,7 @@ Aplikacja webowa dostępna wyłącznie po zalogowaniu. Po uwierzytelnieniu użyt
 
 ## 4. Układ i struktura nawigacji
 
-- Warstwa layoutu (`AppShell`): nagłówek z nazwą aplikacji, linkiem do `/dishes`, menu użytkownika (Wyloguj). Główna sekcja na listę dni lub bazę dań.
+- Warstwa layoutu (`Layout.astro` + `Header`): nagłówek z nazwą aplikacji, linkiem do `/dishes`, menu użytkownika (Wyloguj). Główna sekcja na listę dni lub bazę dań.
 - Nawigacja główna:
   - Po zalogowaniu: domyślna trasa `/`.
   - Link stały do „Baza dań” (`/dishes`).
@@ -127,13 +130,18 @@ Aplikacja webowa dostępna wyłącznie po zalogowaniu. Po uwierzytelnieniu użyt
 
 ## 5. Kluczowe komponenty
 
-- `AppShell` — wspólny layout, nagłówek, slot na treść, menu użytkownika (Wyloguj).
-- `HeaderNav` — nawigacja między `/` i `/dishes`, status sesji.
+- `Layout.astro` — wspólny layout Astro, slot na treść.
+- `Header` — nagłówek z logo, nawigacja między `/` i `/dishes`, menu użytkownika (Wyloguj), responsywny hamburger menu.
+- `HomeView` — główny komponent widoku home, zarządza stanem tygodniowym i overlayami.
+- `WeekNavigator` — nawigacja tygodniowa (poprzedni/następny tydzień), obsługa gestów swipe na mobile.
+- `DayWeekView` — wyświetlanie tygodni w układzie siatki (desktop: 3 kolumny, mobile: 1 kolumna).
 - `FAB` — pływający przycisk akcji (dodaj danie/akcja kontekstowa).
-- `DayListVirtualized` — lista dni z nieskończonym przewijaniem, prefetch okien dat.
 - `DayCard` — kafel dnia: data, nazwa przypisanego dania lub CTA do wyboru.
-- `Dialog` / `Drawer` — kontener nakładek (wybór/zmiana dania, dodawanie/edycja dania) z poprawnym focus management.
-- `DishPickerList` — lista wyboru dań z sortem `usage_prio`, opcjonalnie wyróżnia „nigdy niewybrane”.
+- `DayPlanOverlay` — routowalny overlay wyboru/zmiany dania dla dnia, obsługuje tryby "view" i "edit", renderuje jako Dialog (desktop) / Drawer (mobile).
+- `DayPlanDetailsView` — widok szczegółów przypisanego dania w trybie "view" overlayu.
+- `DishEditorOverlay` — overlay dodawania/edycji dania, renderuje jako Dialog.
+- `Dialog` / `Drawer` — kontener nakładek z poprawnym focus management.
+- `DishPickerList` — lista wyboru dań z sortem `usage_prio`, opcjonalnie wyróżnia „nigdy niewybrane".
 - `TagFilterCombobox` — multi‑select dla filtrowania (AND) w nakładce dnia i w bazie dań.
 - `SearchInput` — pole wyszukiwania z debounce do filtrowania po nazwie w `Baza dań`.
 - `DishList` / `DishListItem` — lista dań w `Baza dań` z paginacją i metadanymi.
@@ -142,4 +150,5 @@ Aplikacja webowa dostępna wyłącznie po zalogowaniu. Po uwierzytelnieniu użyt
 - `TagCreatableCombobox` — tworzenie tagów w locie, normalizacja do lowercase; usunięcie z multi‑selecta może inicjować globalne `DELETE /tags/{id}` z potwierdzeniem.
 - `EmptyState` — komponent pustych stanów (brak dań, brak wyników filtrowania, brak planu).
 - `Toast` / `InlineError` — spójne komunikaty błędów (401/404/409/422/429) i sukcesów.
-- `AuthForm(Login/Signup/Reset)` — formularze auth z walidacją i komunikatami.
+- `LoginForm` / `SignupForm` — formularze auth z walidacją i komunikatami.
+- `AuthPageLayout` — layout dla stron auth (login, signup).
