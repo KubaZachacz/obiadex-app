@@ -6,12 +6,24 @@ Najpierw zorientuję się w strukturze repozytorium (główne katalogi, strony, 
 
 ## 1. Wprowadzenie i cele testowania
 
-- **Cel główny**: Zapewnienie, że aplikacja Obiadex (planowanie posiłków) działa stabilnie, bezpiecznie i zgodnie z wymaganiami biznesowymi opisanymi w dokumentach UI (`ui-plan.md`) i API (`api-plan.md`), na docelowym stosie technologicznym (Astro 5, React 19, TypeScript 5, Tailwind 4, Supabase).
+### Filozofia testowania: JAKOŚĆ > ILOŚĆ
+
+**Kluczowe zasady:**
+- ✅ Testuj LOGIKĘ BIZNESOWĄ, nie framework
+- ✅ Testuj KRYTYCZNE przypadki brzegowe, nie każdy możliwy edge case
+- ✅ Testuj to co MOŻE SIĘ ZEPSUĆ, nie to co jest oczywiste
+- ❌ NIE testuj: "should accept exactly 256 characters" - to marnotrawstwo
+- ❌ NIE testuj: każdej kombinacji parametrów - wybierz reprezentatywne
+- 🎯 **Cel: 50-70 sensownych testów, nie 150+ bezsensownych**
+
+### Cele testowania
+
+- **Cel główny**: Zapewnienie, że aplikacja Obiadex działa stabilnie i zgodnie z wymaganiami biznesowymi (`ui-plan.md`, `api-plan.md`).
 - **Cele szczegółowe**:
-  - **Weryfikacja kluczowych przepływów użytkownika**: logowanie, rejestracja, reset hasła, planowanie dnia, zarządzanie bazą dań i tagów.
-  - **Potwierdzenie poprawności API**: zgodność odpowiedzi i kodów statusu endpointów pod `src/pages/api/**` z planem API (`/dishes`, `/tags`, `/day-plans`, `/analytics`, `/auth/*`).
-  - **Sprawdzenie separacji danych**: poprawne działanie RLS w Supabase – użytkownik widzi tylko własne dania, tagi, plany dni.
-  - **Zapewnienie jakości technicznej**: walidacje po stronie serwera (schematy w `src/lib/validation/**`), spójne komunikaty błędów (`http/responses.ts`), brak regresji w UI (komponenty w `src/components/**`) oraz brak krytycznych problemów wydajnościowych i dostępnościowych.
+  - **Kluczowe przepływy użytkownika**: auth, planowanie dnia, zarządzanie daniami/tagami
+  - **Poprawność API**: zgodność z kontraktami (`api-plan.md`)
+  - **Separacja danych**: RLS w Supabase działa poprawnie
+  - **Jakość techniczna**: walidacje, error handling, brak regresji
 
 ---
 
@@ -50,29 +62,34 @@ Najpierw zorientuję się w strukturze repozytorium (główne katalogi, strony, 
 
 ### 3.1. Testy jednostkowe
 
-- **Zakres**:
-  - **Walidacje** (`src/lib/validation/**`):
-    - `authSchemas`: email/hasło, format, długości.
-    - `dishSchemas`: `name`, `recipeText`, `url`, wymagane tagi przy tworzeniu.
-    - `tagSchemas`: normalizacja do lowercase, unikalność, długości (2–30).
-    - `dayPlanSchemas`: poprawność `day` (format, zakres ±5 lat), `dishId`.
-    - `analyticsSchemas`: poprawność zakresu dat.
-  - **Serwisy** (`src/lib/services/**`) – z mockiem klienta Supabase (`supabase.client.ts`):
-    - Obsługa błędów, mapowanie błędów Supabase na spójne odpowiedzi API.
-    - Zachowanie zgodne z biznesową logiką opisanej w `api-plan.md` (np. wymagane co najmniej 1 tag przy tworzeniu dania).
-  - **Utilsy dat** (`src/lib/date/utils.ts`, `constants.ts`):
-    - Wyliczanie tygodni, zakresów dat (prefetch dla widoku tygodniowego).
-    - Obsługa zmian tygodni, sortowanie, porównywanie dat.
-  - **Hooki i komponenty UI (logika)**:
-    - `useWeekViewport`: przesuwanie zakresu dat, domyślny tydzień, obsługa desktop/mobile.
-    - `useDishListFilters`: inicjacja filtrów, AND-tag filtering, czyszczenie filtrów.
-    - `useDishPicker`: stan wyboru dania, obsługa pustej bazy dań.
-    - `useDebouncedValue`: opóźnienie zmian (np. wyszukiwarki).
-    - Proste komponenty prezentacyjne: `FormMessage`, `EmptyState`, `Pagination`.
+**UWAGA**: Testy jednostkowe powinny koncentrować się TYLKO na logice biznesowej i krytycznych przypadkach brzegowych. Unikaj testowania oczywistych rzeczy jak "should accept exactly 256 characters" - to tylko marnotrawstwo czasu.
+
+- **Zakres (MINIMUM VIABLE)**:
+  - **Walidacje** (`src/lib/validation/**`) - ~50 testów:
+    - `authSchemas` (~7 testów): normalizacja email, podstawowa walidacja hasła, Bearer token
+    - `dishSchemas` (~18 testów): wymaganie tagów (krytyczne!), normalizacja, podstawowe limity
+    - `tagSchemas` (~9 testów): normalizacja lowercase, limity długości, bulk operations
+    - `dayPlanSchemas` (~10 testów): format YYYY-MM-DD, zakres 180 dni, leap year
+    - `analyticsSchemas` (~6 testów): datetime format, zakres dat, walidacja przyszłości
+
+  - **Utilsy dat** (`src/lib/date/utils.ts`) - ~14 testów:
+    - Formatowanie i parsowanie (round-trip)
+    - Obliczanie początku/końca tygodnia (Monday/Sunday)
+    - Dodawanie dni/tygodni z overflow miesięcy
+    - Generowanie zakresów dat
+
+  - **Hooki React** - tylko najprostsze:
+    - `useDebouncedValue` (~3 testy): podstawowy debounce, cancel timer
+    - **POMIŃ**: `useWeekViewport`, `useDishListFilters`, `useDishPicker` - zbyt złożone, testuj w E2E
+
+  - **Serwisy** - **POMIŃ NA RAZIE**:
+    - Wymaga mockowania Supabase - lepiej testować integracyjnie
+    - Można dodać później 1-2 przykładowe testy jako template
 
 - **Cele**:
-  - Szybkie wykrywanie regresji w logice walidacji i przekształceń danych.
-  - Zabezpieczenie kontraktów między UI a API (schematy wejście/wyjście).
+  - Wykrywanie regresji w krytycznej logice biznesowej
+  - Zabezpieczenie kontraktów API (obowiązkowe pola, formaty)
+  - **NIE**: testowanie frameworka, bibliotek, oczywistych edge cases
 
 ### 3.2. Testy integracyjne
 
@@ -301,18 +318,24 @@ Najpierw zorientuję się w strukturze repozytorium (główne katalogi, strony, 
 
 ---
 
-## 8. Kryteria akceptacji testów
+## 8. Kryteria akceptacji testów (REALISTYCZNE)
 
 - **Pokrycie testami**:
-  - Co najmniej **70% pokrycia** (lines/branches) dla `src/lib/**` (walidacje, serwisy, utils).
-  - Co najmniej **50% pokrycia** dla kluczowych komponentów UI (`HomeView`, `DishesView`, `DayPlanOverlay`, `DishEditorOverlay`, formularze auth).
-  - E2E scenariusze obejmujące wszystkie główne ścieżki użytkownika (logowanie, onboarding, planowanie, edycja, zarządzanie tagami).
+  - **~50-60 testów jednostkowych** pokrywających walidacje, date utils, podstawowe hooki
+  - **50-70% pokrycia** dla `src/lib/validation/**` i `src/lib/date/**` (NIE 100%!)
+  - **Serwisy**: testy integracyjne z prawdziwą bazą (nie unit testy z mockami)
+  - **E2E**: kluczowe ścieżki użytkownika (auth, planowanie, zarządzanie daniami/tagami)
+  - **PRIORYTET**: jakość > ilość. Lepiej 50 sensownych testów niż 150 bezsensownych.
+
 - **Jakość i stabilność**:
-  - Brak otwartych defektów o priorytecie **P1** (krytyczne) i **P2** (wysokie) przed releasem.
-  - Wszystkie testy w pipeline CI (lint, jednostkowe, integracyjne, kluczowe E2E) przechodzą zielono.
+  - Brak defektów **P1** (krytyczne) i **P2** (wysokie) przed releasem
+  - Wszystkie testy w CI przechodzą zielono
+  - Szybkie wykonanie suite (<5s dla unit testów)
+
 - **Zgodność z wymaganiami**:
-  - Zgodność kontraktów API z `api-plan.md` (struktura JSON, kody statusu).
-  - Zgodność zachowania UI z `ui-plan.md` (widoki, overlaye, nawigacja tygodniowa, zachowanie FAB, overlayów).
+  - Kontrakty API zgodne z `api-plan.md` (struktura JSON, kody statusu)
+  - UI zgodny z `ui-plan.md` (widoki, overlaye, nawigacja)
+  - **Weryfikacja TYLKO kluczowych przypadków**, nie każdego możliwego edge case'a
 
 ---
 
