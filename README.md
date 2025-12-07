@@ -70,16 +70,19 @@ build` followed by `npm run preview` to test the production build locally.
 
 ## 5. Available scripts
 
-| Command            | Description                                            |
-| ------------------ | ------------------------------------------------------ |
-| `npm run dev`      | Start Astro dev server with hot reload.                |
-| `npm run build`    | Build the production-ready Astro output.               |
-| `npm run preview`  | Preview the production build locally.                  |
-| `npm run astro`    | Run arbitrary Astro CLI commands.                      |
-| `npm run lint`     | Lint all source files with ESLint.                     |
-| `npm run lint:fix` | Lint and auto-fix supported issues.                    |
-| `npm run format`   | Format supported files using Prettier.                 |
-| `npm run supabase` | Access the Supabase CLI (migrations, local dev, etc.). |
+| Command                 | Description                                            |
+| ----------------------- | ------------------------------------------------------ |
+| `npm run dev`           | Start Astro dev server with hot reload.                |
+| `npm run build`         | Build the production-ready Astro output.               |
+| `npm run preview`       | Preview the production build locally.                  |
+| `npm run astro`         | Run arbitrary Astro CLI commands.                      |
+| `npm run lint`          | Lint all source files with ESLint.                     |
+| `npm run lint:fix`      | Lint and auto-fix supported issues.                    |
+| `npm run format`        | Format supported files using Prettier.                 |
+| `npm run test`          | Run Vitest in watch mode with jsdom globals and setup. |
+| `npm run test:run`      | Run Vitest once (passes when no tests are present).    |
+| `npm run test:coverage` | Run Vitest once and emit text and lcov coverage.       |
+| `npm run supabase`      | Access the Supabase CLI (migrations, local dev, etc.). |
 
 ## 6. Project scope
 
