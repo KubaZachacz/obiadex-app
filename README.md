@@ -82,7 +82,13 @@ build` followed by `npm run preview` to test the production build locally.
 | `npm run test`          | Run Vitest in watch mode with jsdom globals and setup. |
 | `npm run test:run`      | Run Vitest once (passes when no tests are present).    |
 | `npm run test:coverage` | Run Vitest once and emit text and lcov coverage.       |
+| `npm run test:e2e`      | Run Playwright E2E suite against the dev server.       |
+| `npm run test:e2e:headed` | Run Playwright in headed mode for debugging.         |
+| `npm run test:e2e:ui`   | Open Playwright UI mode.                               |
+| `npm run test:e2e:report` | Open the latest Playwright HTML report.              |
+| `npm run test:e2e:install` | Download Playwright browsers/deps.                  |
 | `npm run supabase`      | Access the Supabase CLI (migrations, local dev, etc.). |
+| `npm run seed`          | Seed the database with sample data via Supabase.       |
 
 ## 6. Project scope
 

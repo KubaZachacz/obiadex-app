@@ -25,3 +25,10 @@ pnpm-debug.log*
 
 # test output
 coverage/
+playwright-report/
+test-results/
+blob-report/
+*.trace.zip
+
+# playwright auth state
+tests/e2e/.auth/
