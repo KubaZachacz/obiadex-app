@@ -23,6 +23,7 @@ export function FAB({ onClick, className, label = "Dodaj" }: FABProps) {
       )}
       onClick={onClick}
       aria-label={label}
+      data-testid="fab-button"
     >
       <Plus className="h-6 w-6" />
     </Button>

@@ -170,7 +170,7 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-testid="signup-form">
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor={emailId}>Email</Label>

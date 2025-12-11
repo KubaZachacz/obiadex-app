@@ -346,7 +346,7 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate data-testid="dish-form">
       <div className="space-y-4">
         {/* Name Field */}
         <div className="space-y-2">

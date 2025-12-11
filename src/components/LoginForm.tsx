@@ -152,7 +152,7 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-testid="login-form">
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor={emailId}>Email</Label>
