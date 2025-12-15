@@ -1,4 +1,4 @@
-import type { Tables, TablesInsert } from "./db/database.types";
+import type { Tables } from "./db/database.types";
 
 /**
  * DB-backed row helpers used to keep DTOs aligned with Supabase schema.
@@ -6,7 +6,6 @@ import type { Tables, TablesInsert } from "./db/database.types";
 type DishRow = Tables<"dishes">;
 type TagRow = Tables<"tags">;
 type DayPlanRow = Tables<"day_plans">;
-type DishTagRow = Tables<"dish_tags">;
 type EventRow = Tables<"events">;
 
 type NonEmptyArray<T> = [T, ...T[]];
