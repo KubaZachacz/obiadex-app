@@ -1,4 +1,7 @@
-import { useState, useId, type FormEvent } from "react";
+import { useId, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,69 +13,38 @@ interface LoginFormProps {
   defaultEmail?: string;
 }
 
-interface LoginFormState {
-  email: string;
-  password: string;
-  isSubmitting: boolean;
-  error: string | null;
-}
+const loginFormSchema = z.object({
+  email: z.string().trim().min(1, "Email jest wymagany").email("Podaj poprawny adres email"),
+  password: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków"),
+});
+
+type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
   const emailId = useId();
   const passwordId = useId();
 
-  const [formState, setFormState] = useState<LoginFormState>({
-    email: defaultEmail,
-    password: "",
-    isSubmitting: false,
-    error: null,
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: {
+      email: defaultEmail,
+      password: "",
+    },
   });
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validateForm = (): string | null => {
-    if (!formState.email.trim()) {
-      return "Email jest wymagany";
-    }
-
-    if (!validateEmail(formState.email)) {
-      return "Podaj poprawny adres email";
-    }
-
-    if (!formState.password) {
-      return "Hasło jest wymagane";
-    }
-
-    if (formState.password.length < 8) {
-      return "Hasło musi mieć co najmniej 8 znaków";
-    }
-
-    return null;
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Clear previous errors
-    setFormState((prev) => ({ ...prev, error: null }));
-
-    // Validate form
-    const validationError = validateForm();
-    if (validationError) {
-      setFormState((prev) => ({ ...prev, error: validationError }));
-      return;
-    }
-
-    // Submit form
-    setFormState((prev) => ({ ...prev, isSubmitting: true }));
+  const onSubmit = async (values: LoginFormValues) => {
+    setServerError(null);
 
     try {
       const command: AuthLoginCommand = {
-        email: formState.email.trim(),
-        password: formState.password,
+        email: values.email.trim(),
+        password: values.password,
       };
 
       const response = await fetch("/api/auth/login", {
@@ -86,49 +58,29 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
       if (!response.ok) {
         // Handle different error status codes
         if (response.status === 401) {
-          setFormState((prev) => ({
-            ...prev,
-            isSubmitting: false,
-            error: "Nieprawidłowe dane logowania. Sprawdź email i hasło.",
-          }));
+          setServerError("Nieprawidłowe dane logowania. Sprawdź email i hasło.");
           return;
         }
 
         if (response.status === 422) {
           const errorData = await response.json().catch(() => ({}));
           const errorMessage = errorData.message || "Sprawdź poprawność danych logowania";
-          setFormState((prev) => ({
-            ...prev,
-            isSubmitting: false,
-            error: errorMessage,
-          }));
+          setServerError(errorMessage);
           return;
         }
 
         if (response.status === 429) {
-          setFormState((prev) => ({
-            ...prev,
-            isSubmitting: false,
-            error: "Zbyt wiele prób. Spróbuj ponownie za chwilę.",
-          }));
+          setServerError("Zbyt wiele prób. Spróbuj ponownie za chwilę.");
           return;
         }
 
         if (response.status >= 500) {
-          setFormState((prev) => ({
-            ...prev,
-            isSubmitting: false,
-            error: "Wystąpił błąd serwera. Spróbuj ponownie za chwilę.",
-          }));
+          setServerError("Wystąpił błąd serwera. Spróbuj ponownie za chwilę.");
           return;
         }
 
         // Generic error
-        setFormState((prev) => ({
-          ...prev,
-          isSubmitting: false,
-          error: "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
-        }));
+        setServerError("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
         return;
       }
 
@@ -138,36 +90,30 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
       if (onSuccess) {
         onSuccess();
       } else {
-        window.location.href = "/";
+        window.location.assign("/");
       }
-    } catch (error) {
+    } catch {
       // Network error or JSON parsing error
-      console.error("Login error:", error);
-      setFormState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-        error: "Błąd połączenia. Sprawdź połączenie internetowe i spróbuj ponownie.",
-      }));
+      setServerError("Błąd połączenia. Sprawdź połączenie internetowe i spróbuj ponownie.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-testid="login-form">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate data-testid="login-form">
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor={emailId}>Email</Label>
           <Input
             id={emailId}
             type="email"
-            name="email"
             autoComplete="email"
             required
-            value={formState.email}
-            onChange={(e) => setFormState((prev) => ({ ...prev, email: e.target.value }))}
-            disabled={formState.isSubmitting}
-            aria-invalid={formState.error ? "true" : "false"}
+            {...register("email")}
+            disabled={isSubmitting}
+            aria-invalid={errors.email ? "true" : "false"}
             className="w-full"
           />
+          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -175,28 +121,21 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
           <Input
             id={passwordId}
             type="password"
-            name="password"
             autoComplete="current-password"
             required
-            value={formState.password}
-            onChange={(e) => setFormState((prev) => ({ ...prev, password: e.target.value }))}
-            disabled={formState.isSubmitting}
-            aria-invalid={formState.error ? "true" : "false"}
+            {...register("password")}
+            disabled={isSubmitting}
+            aria-invalid={errors.password ? "true" : "false"}
             className="w-full"
           />
+          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
         </div>
       </div>
 
-      {formState.error && (
-        <FormMessage
-          status="error"
-          message={formState.error}
-          onClose={() => setFormState((prev) => ({ ...prev, error: null }))}
-        />
-      )}
+      {serverError && <FormMessage status="error" message={serverError} onClose={() => setServerError(null)} />}
 
-      <Button type="submit" disabled={formState.isSubmitting} className="w-full">
-        {formState.isSubmitting ? "Logowanie..." : "Zaloguj się"}
+      <Button type="submit" disabled={isSubmitting} className="w-full">
+        {isSubmitting ? "Logowanie..." : "Zaloguj się"}
       </Button>
     </form>
   );

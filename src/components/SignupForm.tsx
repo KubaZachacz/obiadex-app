@@ -1,4 +1,7 @@
-import { useState, useId, type FormEvent } from "react";
+import { useId, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,78 +13,45 @@ interface SignupFormProps {
   defaultEmail?: string;
 }
 
-interface SignupFormState {
-  email: string;
-  password: string;
-  isSubmitting: boolean;
-  error: string | null;
-  success: string | null;
-}
+const signupFormSchema = z.object({
+  email: z.string().trim().min(1, "Email jest wymagany").email("Podaj poprawny adres email"),
+  password: z
+    .string()
+    .min(8, "Hasło musi mieć co najmniej 8 znaków")
+    .refine((value) => value.trim() === value, {
+      message: "Hasło nie może zaczynać się ani kończyć spacją",
+    }),
+});
+
+type SignupFormValues = z.infer<typeof signupFormSchema>;
 
 export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
   const emailId = useId();
   const passwordId = useId();
 
-  const [formState, setFormState] = useState<SignupFormState>({
-    email: defaultEmail,
-    password: "",
-    isSubmitting: false,
-    error: null,
-    success: null,
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<SignupFormValues>({
+    resolver: zodResolver(signupFormSchema),
+    defaultValues: {
+      email: defaultEmail,
+      password: "",
+    },
   });
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validateForm = (): string | null => {
-    const trimmedEmail = formState.email.trim();
-
-    if (!trimmedEmail) {
-      return "Email jest wymagany";
-    }
-
-    if (!validateEmail(trimmedEmail)) {
-      return "Podaj poprawny adres email";
-    }
-
-    if (!formState.password) {
-      return "Hasło jest wymagane";
-    }
-
-    if (formState.password.length < 8) {
-      return "Hasło musi mieć co najmniej 8 znaków";
-    }
-
-    // Check for spaces in password (common security issue)
-    if (formState.password !== formState.password.trim()) {
-      return "Hasło nie może zaczynać się ani kończyć spacją";
-    }
-
-    return null;
-  };
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Clear previous messages
-    setFormState((prev) => ({ ...prev, error: null, success: null }));
-
-    // Validate form
-    const validationError = validateForm();
-    if (validationError) {
-      setFormState((prev) => ({ ...prev, error: validationError }));
-      return;
-    }
-
-    // Submit form
-    setFormState((prev) => ({ ...prev, isSubmitting: true }));
+  const onSubmit = async (values: SignupFormValues) => {
+    setServerError(null);
+    setSuccessMessage(null);
 
     try {
       const command: AuthSignupCommand = {
-        email: formState.email.trim(),
-        password: formState.password,
+        email: values.email.trim(),
+        password: values.password,
       };
 
       const response = await fetch("/api/auth/signup", {
@@ -93,99 +63,64 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
       });
 
       if (!response.ok) {
-        // Handle different error status codes
         if (response.status === 409) {
-          setFormState((prev) => ({
-            ...prev,
-            isSubmitting: false,
-            error: "Konto z tym adresem email już istnieje. Spróbuj się zalogować.",
-          }));
+          setServerError("Konto z tym adresem email już istnieje. Spróbuj się zalogować.");
           return;
         }
 
         if (response.status === 422) {
           const errorData = await response.json().catch(() => ({}));
           const errorMessage = errorData.message || "Sprawdź poprawność danych rejestracji";
-          setFormState((prev) => ({
-            ...prev,
-            isSubmitting: false,
-            error: errorMessage,
-          }));
+          setServerError(errorMessage);
           return;
         }
 
         if (response.status === 429) {
-          setFormState((prev) => ({
-            ...prev,
-            isSubmitting: false,
-            error: "Zbyt wiele prób. Spróbuj ponownie za chwilę.",
-          }));
+          setServerError("Zbyt wiele prób. Spróbuj ponownie za chwilę.");
           return;
         }
 
         if (response.status >= 500) {
-          setFormState((prev) => ({
-            ...prev,
-            isSubmitting: false,
-            error: "Wystąpił błąd serwera. Spróbuj ponownie za chwilę.",
-          }));
+          setServerError("Wystąpił błąd serwera. Spróbuj ponownie za chwilę.");
           return;
         }
 
-        // Generic error
-        setFormState((prev) => ({
-          ...prev,
-          isSubmitting: false,
-          error: "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
-        }));
+        setServerError("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
         return;
       }
 
       await response.json();
 
-      // Success - show success message and redirect after delay
-      setFormState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-        success: "Konto zostało utworzone pomyślnie! Przekierowywanie...",
-      }));
+      setSuccessMessage("Konto zostało utworzone pomyślnie! Przekierowywanie...");
 
-      // Redirect after showing success message
       setTimeout(() => {
         if (onSuccess) {
           onSuccess();
         } else {
-          window.location.href = "/login";
+          window.location.assign("/login");
         }
       }, 1500);
-    } catch (error) {
-      // Network error or JSON parsing error
-      console.error("Signup error:", error);
-      setFormState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-        error: "Błąd połączenia. Sprawdź połączenie internetowe i spróbuj ponownie.",
-      }));
+    } catch {
+      setServerError("Błąd połączenia. Sprawdź połączenie internetowe i spróbuj ponownie.");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6" noValidate data-testid="signup-form">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate data-testid="signup-form">
       <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor={emailId}>Email</Label>
           <Input
             id={emailId}
             type="email"
-            name="email"
             autoComplete="email"
             required
-            value={formState.email}
-            onChange={(e) => setFormState((prev) => ({ ...prev, email: e.target.value }))}
-            disabled={formState.isSubmitting}
-            aria-invalid={formState.error ? "true" : "false"}
+            {...register("email")}
+            disabled={isSubmitting}
+            aria-invalid={errors.email ? "true" : "false"}
             className="w-full"
           />
+          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
         </div>
 
         <div className="space-y-2">
@@ -193,32 +128,26 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
           <Input
             id={passwordId}
             type="password"
-            name="password"
             autoComplete="new-password"
             required
-            value={formState.password}
-            onChange={(e) => setFormState((prev) => ({ ...prev, password: e.target.value }))}
-            disabled={formState.isSubmitting}
-            aria-invalid={formState.error ? "true" : "false"}
+            {...register("password")}
+            disabled={isSubmitting}
+            aria-invalid={errors.password ? "true" : "false"}
             className="w-full"
           />
+          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
           <p className="text-xs text-muted-foreground">Minimum 8 znaków</p>
         </div>
       </div>
 
-      {formState.error && (
-        <FormMessage
-          status="error"
-          message={formState.error}
-          onClose={() => setFormState((prev) => ({ ...prev, error: null }))}
-        />
-      )}
+      {serverError && <FormMessage status="error" message={serverError} onClose={() => setServerError(null)} />}
 
-      {formState.success && <FormMessage status="success" message={formState.success} autoHide={true} />}
+      {successMessage && <FormMessage status="success" message={successMessage} autoHide={true} />}
 
-      <Button type="submit" disabled={formState.isSubmitting} className="w-full">
-        {formState.isSubmitting ? "Tworzenie konta..." : "Załóż konto"}
+      <Button type="submit" disabled={isSubmitting} className="w-full">
+        {isSubmitting ? "Tworzenie konta..." : "Załóż konto"}
       </Button>
     </form>
   );
 }
+
