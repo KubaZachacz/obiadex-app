@@ -3,13 +3,12 @@ import { renderHook, act } from "@testing-library/react";
 import { useDishListFilters } from "./useDishListFilters";
 
 describe("useDishListFilters", () => {
+  const setUrl = (url: string) => {
+    window.history.pushState({}, "", url);
+  };
+
   beforeEach(() => {
-    // Mock window.location
-    delete (window as any).location;
-    window.location = {
-      pathname: "/dishes",
-      search: "",
-    } as any;
+    setUrl("/dishes");
 
     // Mock window.history
     window.history.replaceState = vi.fn();
@@ -28,7 +27,7 @@ describe("useDishListFilters", () => {
   });
 
   it("should read filters from URL on mount", () => {
-    window.location.search = "?q=pasta&tagId=550e8400-e29b-41d4-a716-446655440000&page=2&pageSize=50&sort=created_desc";
+    setUrl("/dishes?q=pasta&tagId=550e8400-e29b-41d4-a716-446655440000&page=2&pageSize=50&sort=created_desc");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -42,7 +41,7 @@ describe("useDishListFilters", () => {
   });
 
   it("should handle multiple tagIds in URL", () => {
-    window.location.search = "?tagId=550e8400-e29b-41d4-a716-446655440000&tagId=550e8400-e29b-41d4-a716-446655440001";
+    setUrl("/dishes?tagId=550e8400-e29b-41d4-a716-446655440000&tagId=550e8400-e29b-41d4-a716-446655440001");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -53,7 +52,7 @@ describe("useDishListFilters", () => {
   });
 
   it("should sanitize invalid page values", () => {
-    window.location.search = "?page=0";
+    setUrl("/dishes?page=0");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -61,7 +60,7 @@ describe("useDishListFilters", () => {
   });
 
   it("should sanitize invalid pageSize values", () => {
-    window.location.search = "?pageSize=0";
+    setUrl("/dishes?pageSize=0");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -69,7 +68,7 @@ describe("useDishListFilters", () => {
   });
 
   it("should cap pageSize at 100", () => {
-    window.location.search = "?pageSize=500";
+    setUrl("/dishes?pageSize=500");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -88,7 +87,7 @@ describe("useDishListFilters", () => {
   });
 
   it("should reset page to 1 when updating search query", () => {
-    window.location.search = "?page=3";
+    setUrl("/dishes?page=3");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -103,7 +102,7 @@ describe("useDishListFilters", () => {
   });
 
   it("should reset page to 1 when updating tagIds", () => {
-    window.location.search = "?page=3";
+    setUrl("/dishes?page=3");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -118,7 +117,7 @@ describe("useDishListFilters", () => {
   });
 
   it("should not reset page when updating sort", () => {
-    window.location.search = "?page=3";
+    setUrl("/dishes?page=3");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -133,7 +132,7 @@ describe("useDishListFilters", () => {
   });
 
   it("should reset all filters to defaults", () => {
-    window.location.search = "?q=pasta&page=3&sort=created_desc";
+    setUrl("/dishes?q=pasta&page=3&sort=created_desc");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -179,7 +178,7 @@ describe("useDishListFilters", () => {
 
   it("should preserve existing filters when updating only one", () => {
     // Reset location before this test
-    window.location.search = "?q=pasta&tagId=550e8400-e29b-41d4-a716-446655440000&sort=created_desc";
+    setUrl("/dishes?q=pasta&tagId=550e8400-e29b-41d4-a716-446655440000&sort=created_desc");
 
     const { result } = renderHook(() => useDishListFilters());
 
@@ -199,7 +198,7 @@ describe("useDishListFilters", () => {
 
   it("should sync all filters to URL", () => {
     // Reset to clean state
-    window.location.search = "";
+    setUrl("/dishes");
 
     const { result } = renderHook(() => useDishListFilters());
 

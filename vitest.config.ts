@@ -15,6 +15,13 @@ export default defineConfig({
     environment: "jsdom",
     passWithNoTests: true,
     setupFiles: "./src/test/setup.ts",
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.{idea,git,cache,output,temp}/**",
+      "**/{coverage,playwright-report,test-results,blob-report}/**",
+      "tests/e2e/**",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
