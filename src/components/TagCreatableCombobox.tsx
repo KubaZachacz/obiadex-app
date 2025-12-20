@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { CheckIcon, ChevronDownIcon, CloseIcon, PlusIcon, TrashIcon } from "@/components/icons";
 import type { TagDTO } from "@/types";
 
 interface TagCreatableComboboxProps {
@@ -205,32 +206,12 @@ export function TagCreatableCombobox({
                       aria-label={`Usuń tag ${tag.name} z dania`}
                       onClick={(event) => handleChipRemove(tag, event)}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="size-3"
-                        aria-hidden="true"
-                      >
-                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                      </svg>
+                      <CloseIcon className="size-3" />
                     </button>
                   </Badge>
                 ))}
               </div>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="size-4 shrink-0 opacity-60"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <ChevronDownIcon className="shrink-0 opacity-60" />
             </div>
           </PopoverTrigger>
           <PopoverContent id={popoverContentId} className="w-[min(420px,90vw)] p-0" align="start">
@@ -249,15 +230,7 @@ export function TagCreatableCombobox({
                     {canCreate && (
                       <CommandGroup heading="Utwórz">
                         <CommandItem onSelect={handleCreateTag} disabled={isCreating} className="cursor-pointer">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            className="size-4"
-                            aria-hidden="true"
-                          >
-                            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                          </svg>
+                          <PlusIcon />
                           <span>Utwórz &ldquo;{normalizedSearch}&rdquo;</span>
                         </CommandItem>
                       </CommandGroup>
@@ -294,20 +267,7 @@ export function TagCreatableCombobox({
                                     )}
                                     aria-hidden="true"
                                   >
-                                    {isSelected && (
-                                      <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                        className="size-3"
-                                      >
-                                        <path
-                                          fillRule="evenodd"
-                                          d="M16.704 5.29a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0l-3.25-3.25a1 1 0 011.414-1.414L8.75 11.836l6.543-6.543a1 1 0 011.414 0z"
-                                          clipRule="evenodd"
-                                        />
-                                      </svg>
-                                    )}
+                                    {isSelected && <CheckIcon />}
                                   </span>
                                   <span className={cn("text-sm", isSelected && "font-semibold text-foreground")}>
                                     {tag.name}
@@ -320,23 +280,7 @@ export function TagCreatableCombobox({
                                     aria-label={`Usuń tag ${tag.name} globalnie`}
                                     onClick={(event) => handleRequestDelete(tag, event)}
                                   >
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      stroke="currentColor"
-                                      strokeWidth="1.5"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      className="size-4"
-                                      aria-hidden="true"
-                                    >
-                                      <path d="M3 6h18" />
-                                      <path d="M8 6V4h8v2" />
-                                      <path d="M10 11v6" />
-                                      <path d="M14 11v6" />
-                                      <path d="M5 6h14l-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2l-1-13z" />
-                                    </svg>
+                                    <TrashIcon />
                                   </button>
                                 )}
                               </div>
