@@ -53,7 +53,11 @@ export function TagCreatableCombobox({
   const popoverContentId = useId();
   const testIdPrefix = testId ? `${testId}-` : "";
 
-  const formatTestId = (value: string) => value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-_]/g, "");
+  const formatTestId = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-_]/g, "");
 
   const normalizedSearch = search.toLowerCase().trim();
   const maxReached = maxTags !== undefined && safeValue.length >= maxTags;

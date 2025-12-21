@@ -148,7 +148,12 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
             <Button variant="outline" onClick={() => handleDialogChange(false)} disabled={isDeleting}>
               Anuluj
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} data-testid="dish-delete-confirm">
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              data-testid="dish-delete-confirm"
+            >
               {isDeleting ? "Usuwanie..." : "Usun danie"}
             </Button>
           </DialogFooter>
