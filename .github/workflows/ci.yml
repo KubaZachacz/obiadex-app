@@ -39,6 +39,7 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    environment: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -57,6 +58,8 @@ jobs:
       - name: Playwright tests
         env:
           CI: true
+          TEST_USER: ${{ secrets.TEST_USER }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
         run: npm run test:e2e
       - name: Upload Playwright report
         if: always()
