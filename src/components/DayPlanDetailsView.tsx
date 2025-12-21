@@ -18,10 +18,12 @@ export function DayPlanDetailsView({ dayPlan, onEdit, onDelete, isDeleting }: Da
   const { dish } = dayPlan;
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full flex-col gap-4" data-testid="day-plan-details">
       {/* Dish name */}
       <div>
-        <h3 className="text-lg font-semibold">{dish.name}</h3>
+        <h3 className="text-lg font-semibold" data-testid="day-plan-dish-name">
+          {dish.name}
+        </h3>
       </div>
 
       {/* Tags */}
@@ -64,11 +66,17 @@ export function DayPlanDetailsView({ dayPlan, onEdit, onDelete, isDeleting }: Da
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button variant="outline" onClick={onEdit} className="flex-1">
+        <Button variant="outline" onClick={onEdit} className="flex-1" data-testid="day-plan-edit">
           <Pencil className="mr-2 h-4 w-4" />
           Zmień danie
         </Button>
-        <Button variant="destructive" onClick={onDelete} disabled={isDeleting} className="flex-1">
+        <Button
+          variant="destructive"
+          onClick={onDelete}
+          disabled={isDeleting}
+          className="flex-1"
+          data-testid="day-plan-delete"
+        >
           <Trash2 className="mr-2 h-4 w-4" />
           {isDeleting ? "Usuwanie..." : "Usuń"}
         </Button>

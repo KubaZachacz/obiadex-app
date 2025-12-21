@@ -77,6 +77,7 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
             disabled={isSubmitting}
             aria-invalid={errors.email ? "true" : "false"}
             className="w-full"
+            data-testid="login-email"
           />
           {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
         </div>
@@ -92,6 +93,7 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
             disabled={isSubmitting}
             aria-invalid={errors.password ? "true" : "false"}
             className="w-full"
+            data-testid="login-password"
           />
           {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
         </div>
@@ -99,7 +101,7 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
 
       {error && <FormMessage status="error" message={error.message} onClose={reset} />}
 
-      <Button type="submit" disabled={isSubmitting} className="w-full">
+      <Button type="submit" disabled={isSubmitting} className="w-full" data-testid="login-submit">
         {isSubmitting ? "Logowanie..." : "Zaloguj się"}
       </Button>
     </form>

@@ -44,7 +44,7 @@ export function DishEditorOverlay({ mode, dishId, isOpen, onClose, onSuccess }: 
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto" data-testid="dish-editor-overlay">
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Dodaj nowe danie" : "Edytuj danie"}</DialogTitle>
           <DialogDescription>

@@ -186,6 +186,7 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
           value={state.nameSearch}
           onChange={(e) => setNameSearch(e.target.value)}
           className="h-11"
+          data-testid="day-plan-search"
         />
 
         <TagCreatableCombobox
@@ -194,10 +195,11 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
           options={allTags}
           isLoading={isLoadingTags}
           maxTags={3}
+          testId="day-plan-tags"
         />
       </div>
 
-      <div className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1" data-testid="day-plan-picker">
         <DishPickerList
           items={state.dishes}
           isLoading={isLoadingDishes}
@@ -215,10 +217,10 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
   const footer =
     mode === "edit" ? (
       <>
-        <Button variant="outline" onClick={onClose} disabled={state.saving}>
+        <Button variant="outline" onClick={onClose} disabled={state.saving} data-testid="day-plan-cancel">
           Anuluj
         </Button>
-        <Button onClick={handleSave} disabled={!state.selectedId || state.saving}>
+        <Button onClick={handleSave} disabled={!state.selectedId || state.saving} data-testid="day-plan-save">
           {state.saving ? "Zapisywanie..." : "Zapisz"}
         </Button>
       </>
@@ -227,7 +229,7 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DrawerContent className="!max-h-[96vh] flex h-[96vh] flex-col">
+        <DrawerContent className="!max-h-[96vh] flex h-[96vh] flex-col" data-testid="day-plan-overlay">
           <DrawerHeader className="flex-shrink-0 pb-3">
             <DrawerTitle>{title}</DrawerTitle>
             <DrawerDescription>{description}</DrawerDescription>
@@ -243,7 +245,7 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="flex h-[95vh] max-w-2xl flex-col">
+      <DialogContent className="flex h-[95vh] max-w-2xl flex-col" data-testid="day-plan-overlay">
         <DialogHeader className="flex-shrink-0 pb-3">
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

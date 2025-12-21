@@ -49,6 +49,9 @@ export function DayCard({ day, plan, onOpen, dimmed = false }: DayCardProps) {
       tabIndex={0}
       role="button"
       aria-label={plan ? `${dayName}, ${dayNumber} - ${plan.dish.name}` : `${dayName}, ${dayNumber} - Wybierz danie`}
+      data-testid="day-card"
+      data-day={day}
+      data-today={today ? "true" : "false"}
     >
       <CardContent className="px-3 py-2">
         <div className="flex items-center gap-4">
@@ -61,9 +64,13 @@ export function DayCard({ day, plan, onOpen, dimmed = false }: DayCardProps) {
           {/* Column 2: Dish name */}
           <div className="flex-1 min-w-0 flex items-center">
             {plan ? (
-              <div className="text-xs font-medium line-clamp-1 leading-tight truncate">{plan.dish.name}</div>
+              <div className="text-xs font-medium line-clamp-1 leading-tight truncate" data-testid="day-card-dish-name">
+                {plan.dish.name}
+              </div>
             ) : (
-              <div className="text-xs text-gray-300 leading-tight ">Wybierz</div>
+              <div className="text-xs text-gray-300 leading-tight" data-testid="day-card-empty">
+                Wybierz
+              </div>
             )}
           </div>
 

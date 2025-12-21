@@ -271,6 +271,7 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
             maxLength={80}
             disabled={isSubmitting}
             aria-invalid={errors.name ? "true" : "false"}
+            data-testid="dish-name-input"
           />
           {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
           <p className="text-xs text-muted-foreground">Nazwa dania (3-80 znakow)</p>
@@ -288,6 +289,7 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
             onDelete={handleDeleteTag}
             options={availableTags}
             isLoading={isLoadingTags}
+            testId="dish-tags"
           />
           {errors.tags && <p className="text-sm text-destructive">{errors.tags.message}</p>}
           <p className="text-xs text-muted-foreground">Wybierz lub utworz tagi (2-30 znakow)</p>
@@ -329,10 +331,10 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
       {errorMessage && <FormMessage status="error" message={errorMessage} onClose={() => setErrorMessage(null)} />}
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={isSubmitting} className="flex-1">
+        <Button type="submit" disabled={isSubmitting} className="flex-1" data-testid="dish-submit">
           {isSubmitting ? "Zapisywanie..." : mode === "create" ? "Dodaj danie" : "Zapisz zmiany"}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting} data-testid="dish-cancel">
           Anuluj
         </Button>
       </div>

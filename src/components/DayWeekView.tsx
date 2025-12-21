@@ -37,7 +37,7 @@ export function DayWeekView({ viewport, dayPlans, isLoading, onSelectDay }: DayW
   }
 
   return (
-    <div className="p-4">
+    <div className="p-4" data-testid="day-week-view">
       {/* Mobile: flex-col stacks weeks vertically, Desktop: grid-cols-3 shows 3 week columns */}
       <div className="flex flex-col gap-2 md:grid md:grid-cols-3">
         {isLoading

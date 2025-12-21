@@ -44,7 +44,7 @@ export function DishPickerList({ items, isLoading, onSelect, selectedId, emptyVa
   }
 
   return (
-    <div className="space-y-2 max-h-[400px] overflow-y-auto">
+    <div className="space-y-2 max-h-[400px] overflow-y-auto" data-testid="dish-picker-list">
       {items.map((dish) => {
         const isSelected = selectedId === dish.id;
 
@@ -66,6 +66,9 @@ export function DishPickerList({ items, isLoading, onSelect, selectedId, emptyVa
             )}
             aria-pressed={isSelected}
             aria-label={`Wybierz danie ${dish.name}`}
+            data-testid="dish-picker-item"
+            data-dish-id={dish.id}
+            data-dish-name={dish.name}
           >
             <div className="space-y-2">
               <div className="flex items-start justify-between gap-2">

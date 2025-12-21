@@ -26,6 +26,7 @@ interface TagCreatableComboboxProps {
   error?: string;
   className?: string;
   maxTags?: number;
+  testId?: string;
 }
 
 export function TagCreatableCombobox({
@@ -38,6 +39,7 @@ export function TagCreatableCombobox({
   error,
   className,
   maxTags,
+  testId,
 }: TagCreatableComboboxProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -49,6 +51,9 @@ export function TagCreatableCombobox({
   const safeValue = useMemo(() => value || [], [value]);
   const selectedIds = useMemo(() => safeValue.map((tag) => tag.id), [safeValue]);
   const popoverContentId = useId();
+  const testIdPrefix = testId ? `${testId}-` : "";
+
+  const formatTestId = (value: string) => value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-_]/g, "");
 
   const normalizedSearch = search.toLowerCase().trim();
   const maxReached = maxTags !== undefined && safeValue.length >= maxTags;
@@ -179,6 +184,7 @@ export function TagCreatableCombobox({
                 isTriggerDisabled && "cursor-not-allowed opacity-75"
               )}
               data-disabled={isTriggerDisabled ? "" : undefined}
+              data-testid={testId}
               onClick={(event) => {
                 if (isTriggerDisabled) {
                   event.preventDefault();
@@ -221,6 +227,7 @@ export function TagCreatableCombobox({
                 value={search}
                 onValueChange={setSearch}
                 aria-label="Wyszukaj tag"
+                data-testid={testId ? `${testIdPrefix}search` : undefined}
               />
               <CommandList>
                 {isLoading && <CommandEmpty>Ładowanie tagów...</CommandEmpty>}
@@ -229,7 +236,12 @@ export function TagCreatableCombobox({
                   <>
                     {canCreate && (
                       <CommandGroup heading="Utwórz">
-                        <CommandItem onSelect={handleCreateTag} disabled={isCreating} className="cursor-pointer">
+                        <CommandItem
+                          onSelect={handleCreateTag}
+                          disabled={isCreating}
+                          className="cursor-pointer"
+                          data-testid={testId ? `${testIdPrefix}create` : undefined}
+                        >
                           <PlusIcon />
                           <span>Utwórz &ldquo;{normalizedSearch}&rdquo;</span>
                         </CommandItem>
@@ -255,6 +267,7 @@ export function TagCreatableCombobox({
                               onSelect={() => handleToggleTag(tag)}
                               disabled={isDisabled}
                               className={cn("cursor-pointer", isDisabled && "opacity-50")}
+                              data-testid={testId ? `${testIdPrefix}option-${formatTestId(tag.name)}` : undefined}
                             >
                               <div className="flex w-full items-center justify-between gap-2">
                                 <span className="flex items-center gap-2">

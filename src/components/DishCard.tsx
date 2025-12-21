@@ -60,16 +60,24 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
 
   return (
     <>
-      <Card className="overflow-hidden transition-shadow hover:shadow-md">
+      <Card
+        className="overflow-hidden transition-shadow hover:shadow-md"
+        data-testid="dish-card"
+        data-dish-id={dish.id}
+        data-dish-name={dish.name}
+      >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-lg">{dish.name}</CardTitle>
+            <CardTitle className="text-lg" data-testid="dish-card-name">
+              {dish.name}
+            </CardTitle>
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => handleDialogChange(true)}
                 aria-label={`Usun danie ${dish.name}`}
+                data-testid="dish-delete-trigger"
               >
                 <Trash2 className="size-4 text-red-500" aria-hidden="true" />
               </Button>
@@ -79,6 +87,7 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
                 onClick={() => onEdit(dish.id)}
                 className="shrink-0"
                 aria-label={`Edytuj danie ${dish.name}`}
+                data-testid="dish-edit-trigger"
               >
                 <EditIcon />
                 Edytuj
@@ -129,7 +138,7 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm" data-testid="dish-delete-dialog">
           <DialogHeader>
             <DialogTitle>Usun danie</DialogTitle>
             <DialogDescription>Czy na pewno chcesz usunac to danie? Tej operacji nie da sie cofnac.</DialogDescription>
@@ -139,7 +148,7 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
             <Button variant="outline" onClick={() => handleDialogChange(false)} disabled={isDeleting}>
               Anuluj
             </Button>
-            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} data-testid="dish-delete-confirm">
               {isDeleting ? "Usuwanie..." : "Usun danie"}
             </Button>
           </DialogFooter>
