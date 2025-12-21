@@ -7,11 +7,12 @@ describe("useDishListFilters", () => {
     window.history.pushState({}, "", url);
   };
 
-  beforeEach(() => {
-    setUrl("/dishes");
+  let replaceStateSpy: ReturnType<typeof vi.spyOn>;
 
-    // Mock window.history
-    window.history.replaceState = vi.fn();
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    setUrl("/dishes");
+    replaceStateSpy = vi.spyOn(window.history, "replaceState");
   });
 
   it("should initialize with default values", () => {
@@ -26,70 +27,36 @@ describe("useDishListFilters", () => {
     });
   });
 
-  it("should read filters from URL on mount", () => {
-    setUrl("/dishes?q=pasta&tagId=550e8400-e29b-41d4-a716-446655440000&page=2&pageSize=50&sort=created_desc");
+  it("should strip query params on mount", () => {
+    setUrl("/dishes?q=pasta&page=2");
 
-    const { result } = renderHook(() => useDishListFilters());
+    renderHook(() => useDishListFilters());
 
-    expect(result.current.filters).toEqual({
-      q: "pasta",
-      tagIds: ["550e8400-e29b-41d4-a716-446655440000"],
-      page: 2,
-      pageSize: 50,
-      sort: "created_desc",
-    });
+    expect(replaceStateSpy).toHaveBeenCalledWith({}, "", "/dishes");
   });
 
-  it("should handle multiple tagIds in URL", () => {
-    setUrl("/dishes?tagId=550e8400-e29b-41d4-a716-446655440000&tagId=550e8400-e29b-41d4-a716-446655440001");
+  it("should preserve edit id when stripping query params", () => {
+    setUrl("/dishes?id=123&q=pasta");
 
-    const { result } = renderHook(() => useDishListFilters());
+    renderHook(() => useDishListFilters());
 
-    expect(result.current.filters.tagIds).toEqual([
-      "550e8400-e29b-41d4-a716-446655440000",
-      "550e8400-e29b-41d4-a716-446655440001",
-    ]);
+    expect(replaceStateSpy).toHaveBeenCalledWith({}, "", "/dishes?id=123");
   });
 
-  it("should sanitize invalid page values", () => {
-    setUrl("/dishes?page=0");
+  it("should not change url when only edit id exists", () => {
+    setUrl("/dishes?id=123");
 
-    const { result } = renderHook(() => useDishListFilters());
+    renderHook(() => useDishListFilters());
 
-    expect(result.current.filters.page).toBe(1);
-  });
-
-  it("should sanitize invalid pageSize values", () => {
-    setUrl("/dishes?pageSize=0");
-
-    const { result } = renderHook(() => useDishListFilters());
-
-    expect(result.current.filters.pageSize).toBe(20);
-  });
-
-  it("should cap pageSize at 100", () => {
-    setUrl("/dishes?pageSize=500");
-
-    const { result } = renderHook(() => useDishListFilters());
-
-    expect(result.current.filters.pageSize).toBe(20); // Falls back to default
-  });
-
-  it("should update filters and sync to URL", () => {
-    const { result } = renderHook(() => useDishListFilters());
-
-    act(() => {
-      result.current.updateFilters({ q: "pizza" });
-    });
-
-    expect(result.current.filters.q).toBe("pizza");
-    expect(window.history.replaceState).toHaveBeenCalled();
+    expect(replaceStateSpy).not.toHaveBeenCalled();
   });
 
   it("should reset page to 1 when updating search query", () => {
-    setUrl("/dishes?page=3");
-
     const { result } = renderHook(() => useDishListFilters());
+
+    act(() => {
+      result.current.updateFilters({ page: 3 });
+    });
 
     expect(result.current.filters.page).toBe(3);
 
@@ -102,9 +69,11 @@ describe("useDishListFilters", () => {
   });
 
   it("should reset page to 1 when updating tagIds", () => {
-    setUrl("/dishes?page=3");
-
     const { result } = renderHook(() => useDishListFilters());
+
+    act(() => {
+      result.current.updateFilters({ page: 3 });
+    });
 
     expect(result.current.filters.page).toBe(3);
 
@@ -117,9 +86,11 @@ describe("useDishListFilters", () => {
   });
 
   it("should not reset page when updating sort", () => {
-    setUrl("/dishes?page=3");
-
     const { result } = renderHook(() => useDishListFilters());
+
+    act(() => {
+      result.current.updateFilters({ page: 3 });
+    });
 
     expect(result.current.filters.page).toBe(3);
 
@@ -132,9 +103,17 @@ describe("useDishListFilters", () => {
   });
 
   it("should reset all filters to defaults", () => {
-    setUrl("/dishes?q=pasta&page=3&sort=created_desc");
-
     const { result } = renderHook(() => useDishListFilters());
+
+    act(() => {
+      result.current.updateFilters({
+        q: "pasta",
+        tagIds: ["550e8400-e29b-41d4-a716-446655440000"],
+        page: 2,
+        pageSize: 50,
+        sort: "created_desc",
+      });
+    });
 
     expect(result.current.filters.q).toBe("pasta");
 
@@ -171,53 +150,33 @@ describe("useDishListFilters", () => {
     });
   });
 
-  it("should handle SSR (window undefined)", () => {
-    // Skip this test in jsdom environment
-    // In actual SSR, the hook handles undefined window correctly
-  });
-
   it("should preserve existing filters when updating only one", () => {
-    // Reset location before this test
-    setUrl("/dishes?q=pasta&tagId=550e8400-e29b-41d4-a716-446655440000&sort=created_desc");
-
     const { result } = renderHook(() => useDishListFilters());
 
-    // Verify initial state from URL
-    expect(result.current.filters.q).toBe("pasta");
-    expect(result.current.filters.tagIds).toContain("550e8400-e29b-41d4-a716-446655440000");
-    expect(result.current.filters.sort).toBe("created_desc");
+    act(() => {
+      result.current.updateFilters({
+        q: "pasta",
+        tagIds: ["550e8400-e29b-41d4-a716-446655440000"],
+        sort: "created_desc",
+      });
+    });
 
     act(() => {
       result.current.updateFilters({ page: 2 });
     });
 
-    // Check that other filters are preserved
     expect(result.current.filters.q).toBe("pasta");
-    expect(result.current.filters.page).toBe(2);
-  });
-
-  it("should sync all filters to URL", () => {
-    // Reset to clean state
-    setUrl("/dishes");
-
-    const { result } = renderHook(() => useDishListFilters());
+    expect(result.current.filters.tagIds).toContain("550e8400-e29b-41d4-a716-446655440000");
+    expect(result.current.filters.sort).toBe("created_desc");
 
     act(() => {
-      result.current.updateFilters({
-        q: "test",
-        page: 2,
-        pageSize: 30,
-        sort: "name_desc",
-      });
+      result.current.updateFilters({ pageSize: 50 });
     });
 
-    // Verify the filters are updated
-    expect(result.current.filters.q).toBe("test");
-    expect(result.current.filters.page).toBe(1); // Reset to 1 because q changed
-    expect(result.current.filters.pageSize).toBe(30);
-    expect(result.current.filters.sort).toBe("name_desc");
-
-    // Verify history.replaceState was called
-    expect(window.history.replaceState).toHaveBeenCalled();
+    expect(result.current.filters.q).toBe("pasta");
+    expect(result.current.filters.page).toBe(2);
+    expect(result.current.filters.pageSize).toBe(50);
   });
+
+  it.todo("should handle SSR (window undefined)");
 });
