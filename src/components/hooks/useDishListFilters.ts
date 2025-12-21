@@ -26,11 +26,25 @@ const createDefaultFilters = (): DishListFilters => ({
 export function useDishListFilters() {
   const [filters, setFilters] = useState<DishListFilters>(() => createDefaultFilters());
 
-  // Strip any existing query params from the URL on first render.
+  // Strip any existing query params from the URL on first render, except edit modal id.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (window.location.search) {
+    if (!window.location.search) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const editId = params.get("id");
+
+    if (!editId) {
       window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+
+    const cleanedParams = new URLSearchParams();
+    cleanedParams.set("id", editId);
+    const nextUrl = `${window.location.pathname}?${cleanedParams.toString()}`;
+
+    if (window.location.search !== `?${cleanedParams.toString()}`) {
+      window.history.replaceState({}, "", nextUrl);
     }
   }, []);
 

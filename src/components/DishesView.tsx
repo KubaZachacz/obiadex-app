@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/SearchInput";
 import { TagFilterCombobox } from "@/components/TagFilterCombobox";
@@ -21,6 +21,7 @@ export function DishesView() {
   const { isOpen: isAddDishOpen, open: openAddDish, close: closeAddDish } = useAddDishDialog();
 
   const [error, setError] = useState<string | null>(null);
+  const [editDishId, setEditDishId] = useState<string | null>(null);
 
   const tagsQuery = useQuery<TagListResponse>("/api/tags?includeCounts=true", {
     onError: (apiError) => {
@@ -67,8 +68,23 @@ export function DishesView() {
   const tags = tagsQuery.data?.data ?? [];
   const isLoadingTags = tagsQuery.isLoading;
 
+  const syncEditDishId = useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    setEditDishId(params.get("id"));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    syncEditDishId();
+    window.addEventListener("popstate", syncEditDishId);
+    return () => window.removeEventListener("popstate", syncEditDishId);
+  }, [syncEditDishId]);
+
   const handleEdit = useCallback((dishId: string) => {
-    window.location.href = `/dishes/${dishId}/edit`;
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set("id", dishId);
+    window.history.pushState({}, "", nextUrl.toString());
+    setEditDishId(dishId);
   }, []);
 
   const handleAddNew = useCallback(() => {
@@ -80,6 +96,16 @@ export function DishesView() {
       return;
     });
   }, [refetchDishes]);
+
+  const handleCloseEdit = useCallback(() => {
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.delete("id");
+    const nextPath = nextUrl.searchParams.toString()
+      ? `${nextUrl.pathname}?${nextUrl.searchParams.toString()}`
+      : nextUrl.pathname;
+    window.history.replaceState({}, "", nextPath);
+    setEditDishId(null);
+  }, []);
 
   const hasFilters = !!filters.q || filters.tagIds.length > 0;
   const isEmpty = dishes && dishes.data.length === 0;
@@ -166,6 +192,13 @@ export function DishesView() {
         )}
 
         <DishEditorOverlay mode="create" isOpen={isAddDishOpen} onClose={closeAddDish} onSuccess={reloadDishes} />
+        <DishEditorOverlay
+          mode="edit"
+          dishId={editDishId ?? undefined}
+          isOpen={!!editDishId}
+          onClose={handleCloseEdit}
+          onSuccess={reloadDishes}
+        />
 
         <FAB onClick={handleAddNew} label="Dodaj danie" />
       </div>
