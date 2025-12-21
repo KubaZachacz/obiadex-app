@@ -90,6 +90,12 @@ build` followed by `npm run preview` to test the production build locally.
 | `npm run supabase`      | Access the Supabase CLI (migrations, local dev, etc.). |
 | `npm run seed`          | Seed the database with sample data via Supabase.       |
 
+## 9. Docker
+
+- Build the image and keep the SSR server listening on port 4321: `docker build -t obiadex-app . && docker run -p 4321:4321 obiadex-app`.
+- Or rebuild and run via `docker compose up --build` which exposes the same port and can be wired to an Nginx Proxy Manager instance later.
+- The supplied `Dockerfile`, `.dockerignore`, and `docker-compose.yml` follow the Astro Docker recipe to package the production build and run `dist/server/entry.mjs` with `NODE_ENV=production`.  
+
 ## 6. Project scope
 
 - **Authentication:** Sign-up, login, logout, optional password reset via

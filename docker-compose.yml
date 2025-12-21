@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  obiadex-app:
+    build:
+      context: .
+      target: runner
+    ports:
+      - "4321:4321"
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "4321"
+    restart: unless-stopped
