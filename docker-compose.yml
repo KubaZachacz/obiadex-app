@@ -2,13 +2,23 @@ version: "3.9"
 
 services:
   obiadex-app:
+    container_name: obiadex-app
     build:
       context: .
       target: runner
-    container_name: obiadex-app
-    ports:
-      - "80:4321"
+      dockerfile: Dockerfile
+    image: obiadex-app:latest
+    restart: unless-stopped
+    networks:
+      - proxy_network
+    expose:
+      - "4321"
     environment:
       HOST: "0.0.0.0"
       PORT: "4321"
-    restart: unless-stopped
+    labels:
+      project: "obiadex-app"
+
+networks:
+  proxy_network:
+    external: true
