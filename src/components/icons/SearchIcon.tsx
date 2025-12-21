@@ -21,4 +21,3 @@ export function SearchIcon({ className, "aria-hidden": ariaHidden, ...props }: I
     </svg>
   );
 }
-

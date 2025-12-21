@@ -21,4 +21,3 @@ export function ChevronDownIcon({ className, "aria-hidden": ariaHidden, ...props
     </svg>
   );
 }
-

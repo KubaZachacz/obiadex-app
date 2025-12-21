@@ -17,4 +17,3 @@ export function EditIcon({ className, "aria-hidden": ariaHidden, ...props }: Ico
     </svg>
   );
 }
-

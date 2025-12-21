@@ -17,4 +17,3 @@ export function CloseIcon({ className, "aria-hidden": ariaHidden, ...props }: Ic
     </svg>
   );
 }
-

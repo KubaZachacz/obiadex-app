@@ -21,4 +21,3 @@ export function ArrowLeftIcon({ className, "aria-hidden": ariaHidden, ...props }
     </svg>
   );
 }
-

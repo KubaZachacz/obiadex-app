@@ -18,4 +18,3 @@ export function ExternalLinkIcon({ className, "aria-hidden": ariaHidden, ...prop
     </svg>
   );
 }
-

@@ -21,4 +21,3 @@ export function ErrorIcon({ className, "aria-hidden": ariaHidden, ...props }: Ic
     </svg>
   );
 }
-

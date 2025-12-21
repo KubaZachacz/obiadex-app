@@ -25,4 +25,3 @@ export function TrashIcon({ className, "aria-hidden": ariaHidden, ...props }: Ic
     </svg>
   );
 }
-

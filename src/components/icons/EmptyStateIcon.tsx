@@ -21,4 +21,3 @@ export function EmptyStateIcon({ className, "aria-hidden": ariaHidden, ...props 
     </svg>
   );
 }
-

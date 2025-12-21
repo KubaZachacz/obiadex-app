@@ -17,4 +17,3 @@ export function PlusIcon({ className, "aria-hidden": ariaHidden, ...props }: Ico
     </svg>
   );
 }
-

@@ -21,4 +21,3 @@ export function CheckIcon({ className, "aria-hidden": ariaHidden, ...props }: Ic
     </svg>
   );
 }
-

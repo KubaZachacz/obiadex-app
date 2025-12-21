@@ -21,4 +21,3 @@ export function SuccessIcon({ className, "aria-hidden": ariaHidden, ...props }: 
     </svg>
   );
 }
-

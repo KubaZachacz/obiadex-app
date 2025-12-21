@@ -150,4 +150,3 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
     </form>
   );
 }
-
