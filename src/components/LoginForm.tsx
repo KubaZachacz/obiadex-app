@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/FormMessage";
-import type { AuthLoginCommand } from "@/types";
+import { useMutation } from "@/lib/http/hooks";
+import type { AuthLoginCommand, AuthLoginResponse } from "@/types";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -24,12 +25,10 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
   const emailId = useId();
   const passwordId = useId();
 
-  const [serverError, setServerError] = useState<string | null>(null);
-
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -38,63 +37,29 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
     },
   });
 
+  const { mutateAsync, isSubmitting, error, reset } = useMutation<AuthLoginResponse, AuthLoginCommand>(
+    "/api/auth/login",
+    {
+      onSuccess: () => {
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          window.location.assign("/");
+        }
+      },
+    }
+  );
+
   const onSubmit = async (values: LoginFormValues) => {
-    setServerError(null);
+    const command: AuthLoginCommand = {
+      email: values.email.trim(),
+      password: values.password,
+    };
 
     try {
-      const command: AuthLoginCommand = {
-        email: values.email.trim(),
-        password: values.password,
-      };
-
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(command),
-      });
-
-      if (!response.ok) {
-        // Handle different error status codes
-        if (response.status === 401) {
-          setServerError("Nieprawidłowe dane logowania. Sprawdź email i hasło.");
-          return;
-        }
-
-        if (response.status === 422) {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData.message || "Sprawdź poprawność danych logowania";
-          setServerError(errorMessage);
-          return;
-        }
-
-        if (response.status === 429) {
-          setServerError("Zbyt wiele prób. Spróbuj ponownie za chwilę.");
-          return;
-        }
-
-        if (response.status >= 500) {
-          setServerError("Wystąpił błąd serwera. Spróbuj ponownie za chwilę.");
-          return;
-        }
-
-        // Generic error
-        setServerError("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
-        return;
-      }
-
-      await response.json();
-
-      // Success - redirect or call onSuccess
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        window.location.assign("/");
-      }
+      await mutateAsync(command);
     } catch {
-      // Network error or JSON parsing error
-      setServerError("Błąd połączenia. Sprawdź połączenie internetowe i spróbuj ponownie.");
+      return;
     }
   };
 
@@ -132,7 +97,7 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
         </div>
       </div>
 
-      {serverError && <FormMessage status="error" message={serverError} onClose={() => setServerError(null)} />}
+      {error && <FormMessage status="error" message={error.message} onClose={reset} />}
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? "Logowanie..." : "Zaloguj się"}

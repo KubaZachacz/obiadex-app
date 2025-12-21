@@ -2,6 +2,7 @@ import { useEffect, useState, useId, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,14 +10,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormMessage } from "@/components/FormMessage";
 import { TagCreatableCombobox } from "@/components/TagCreatableCombobox";
 import { LoadingSpinnerIcon } from "@/components/icons";
-import type { TagDTO, DishDetailResponse, TagCreateCommand } from "@/types";
+import { useMutation, useQuery } from "@/lib/http/hooks";
+import type {
+  DishCreateCommand,
+  DishDTO,
+  DishDetailResponse,
+  DishUpdateCommand,
+  TagCreateCommand,
+  TagDTO,
+  TagListResponse,
+} from "@/types";
 
 // Validation schema matching PRD requirements
 const dishFormSchema = z.object({
   name: z
     .string()
-    .min(3, "Nazwa musi mieć co najmniej 3 znaki")
-    .max(80, "Nazwa może mieć maksymalnie 80 znaków")
+    .min(3, "Nazwa musi miec co najmniej 3 znaki")
+    .max(80, "Nazwa moze miec maksymalnie 80 znakow")
     .trim(),
   tags: z
     .array(
@@ -31,12 +41,12 @@ const dishFormSchema = z.object({
     .min(1, "Wybierz co najmniej 1 tag"),
   recipeText: z
     .string()
-    .max(2000, "Przepis może mieć maksymalnie 2000 znaków")
+    .max(2000, "Przepis moze miec maksymalnie 2000 znakow")
     .optional()
     .transform((val) => (val?.trim() === "" ? undefined : val)),
   url: z
     .string()
-    .max(255, "URL może mieć maksymalnie 255 znaków")
+    .max(255, "URL moze miec maksymalnie 255 znakow")
     .url("Podaj poprawny URL")
     .optional()
     .or(z.literal(""))
@@ -57,15 +67,13 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
   const recipeId = useId();
   const urlId = useId();
 
-  const [isLoadingDish, setIsLoadingDish] = useState(mode === "edit");
   const [availableTags, setAvailableTags] = useState<TagDTO[]>([]);
-  const [isLoadingTags, setIsLoadingTags] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     setValue,
     watch,
     reset,
@@ -81,247 +89,160 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
 
   const selectedTags = watch("tags");
 
-  // Fetch available tags
+  const { data: tagsResponse, isLoading: isLoadingTags, refetch: refetchTags } = useQuery<TagListResponse>("/api/tags");
+
   useEffect(() => {
-    const controller = new AbortController();
+    if (tagsResponse?.data) {
+      setAvailableTags(tagsResponse.data);
+    }
+  }, [tagsResponse]);
 
-    const fetchTags = async () => {
-      try {
-        const response = await fetch("/api/tags", {
-          signal: controller.signal,
+  const { isLoading: isLoadingDish } = useQuery<{ data: DishDetailResponse }>(
+    mode === "edit" && dishId ? `/api/dishes/${dishId}` : null,
+    {
+      enabled: mode === "edit" && !!dishId,
+      onSuccess: (response) => {
+        setErrorMessage(null);
+        reset({
+          name: response.data.name,
+          tags: response.data.tags,
+          recipeText: response.data.recipeText || "",
+          url: response.data.url || "",
         });
-
-        if (response.status === 401) {
-          window.location.href = "/login";
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error("Nie udało się wczytać tagów");
-        }
-
-        const data = await response.json();
-        setAvailableTags(data.data);
-      } catch (err) {
-        if (err instanceof Error && err.name !== "AbortError") {
-          console.error("Error fetching tags:", err);
-        }
-      } finally {
-        setIsLoadingTags(false);
-      }
-    };
-
-    fetchTags();
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  // Fetch dish data if editing
-  useEffect(() => {
-    if (mode !== "edit" || !dishId) return;
-
-    const controller = new AbortController();
-
-    const fetchDish = async () => {
-      try {
-        const response = await fetch(`/api/dishes/${dishId}`, {
-          signal: controller.signal,
-        });
-
-        if (response.status === 401) {
-          window.location.href = "/login";
-          return;
-        }
-
-        if (response.status === 404) {
-          setError("Nie znaleziono dania");
+      },
+      onError: (apiError) => {
+        if (apiError.status === 404) {
+          setErrorMessage("Nie znaleziono dania");
           setTimeout(() => onCancel(), 2000);
           return;
         }
+        setErrorMessage(apiError.message);
+      },
+    }
+  );
 
-        if (!response.ok) {
-          throw new Error("Nie udało się wczytać dania");
+  const createTagMutation = useMutation<{ data: TagDTO }, TagCreateCommand>("/api/tags", {
+    onSuccess: (response) => {
+      setAvailableTags((prev) => {
+        if (prev.some((tag) => tag.id === response.data.id)) {
+          return prev;
         }
+        return [...prev, response.data];
+      });
+    },
+  });
 
-        const { data: dishData }: { data: DishDetailResponse } = await response.json();
-        reset({
-          name: dishData.name,
-          tags: dishData.tags,
-          recipeText: dishData.recipeText || "",
-          url: dishData.url || "",
-        });
+  const deleteTagMutation = useMutation<unknown, { tagId: string }>((variables) => `/api/tags/${variables.tagId}`, {
+    method: "DELETE",
+    onSuccess: (_, variables) => {
+      setAvailableTags((prev) => prev.filter((tag) => tag.id !== variables.tagId));
+    },
+  });
+
+  const createDishMutation = useMutation<{ data: DishDTO }, DishCreateCommand>("/api/dishes", {
+    onSuccess: (response) => {
+      setErrorMessage(null);
+      onSuccess(response.data.id);
+    },
+    onError: (apiError) => {
+      setErrorMessage(apiError.message);
+    },
+  });
+
+  const updateDishMutation = useMutation<{ data: DishDTO }, DishUpdateCommand>(() => `/api/dishes/${dishId}`, {
+    method: "PUT",
+    onSuccess: (response) => {
+      setErrorMessage(null);
+      onSuccess(response.data.id);
+    },
+    onError: (apiError) => {
+      setErrorMessage(apiError.message);
+    },
+  });
+
+  const handleCreateTag = useCallback(
+    async (name: string): Promise<TagDTO> => {
+      const command: TagCreateCommand = { name: name.toLowerCase().trim() };
+
+      try {
+        const response = await createTagMutation.mutateAsync(command);
+        return response.data;
       } catch (err) {
-        if (err instanceof Error && err.name !== "AbortError") {
-          console.error("Error fetching dish:", err);
-          setError("Wystąpił błąd podczas wczytywania dania");
+        if (axios.isAxiosError(err) && err.response?.status === 409) {
+          const refreshed = await refetchTags();
+          const existingTag = refreshed?.data.find((tag) => tag.name.toLowerCase() === name.toLowerCase());
+          if (existingTag) {
+            setAvailableTags((prev) => {
+              if (prev.some((tag) => tag.id === existingTag.id)) {
+                return prev;
+              }
+              return [...prev, existingTag];
+            });
+            return existingTag;
+          }
         }
-      } finally {
-        setIsLoadingDish(false);
+        throw err;
       }
-    };
+    },
+    [createTagMutation, refetchTags]
+  );
 
-    fetchDish();
-
-    return () => {
-      controller.abort();
-    };
-  }, [mode, dishId, reset, onCancel]);
-
-  const handleCreateTag = useCallback(async (name: string): Promise<TagDTO> => {
-    const command: TagCreateCommand = { name: name.toLowerCase().trim() };
-
-    const response = await fetch("/api/tags", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(command),
-    });
-
-    if (response.status === 409) {
-      // Tag already exists, fetch all tags to find it
-      const tagsResponse = await fetch("/api/tags");
-      const tagsData = await tagsResponse.json();
-      const existingTag = tagsData.data.find((tag: TagDTO) => tag.name.toLowerCase() === name.toLowerCase());
-      if (existingTag) {
-        setAvailableTags((prev) => {
-          if (prev.some((t) => t.id === existingTag.id)) return prev;
-          return [...prev, existingTag];
-        });
-        return existingTag;
+  const handleDeleteTag = useCallback(
+    async (tag: TagDTO): Promise<boolean> => {
+      try {
+        await deleteTagMutation.mutateAsync({ tagId: tag.id });
+        return true;
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response?.status === 404) {
+          setAvailableTags((prev) => prev.filter((item) => item.id !== tag.id));
+          return true;
+        }
+        return false;
       }
-    }
-
-    if (!response.ok) {
-      throw new Error("Nie udało się utworzyć tagu");
-    }
-
-    const { data }: { data: TagDTO } = await response.json();
-    const newTag = data;
-    setAvailableTags((prev) => [...prev, newTag]);
-    return newTag;
-  }, []);
-
-  const handleDeleteTag = useCallback(async (tag: TagDTO): Promise<boolean> => {
-    const response = await fetch(`/api/tags/${tag.id}`, {
-      method: "DELETE",
-    });
-
-    if (response.status === 404) {
-      // Tag already deleted
-      setAvailableTags((prev) => prev.filter((t) => t.id !== tag.id));
-      return true;
-    }
-
-    if (!response.ok) {
-      throw new Error("Nie udało się usunąć tagu");
-    }
-
-    setAvailableTags((prev) => prev.filter((t) => t.id !== tag.id));
-    return true;
-  }, []);
+    },
+    [deleteTagMutation]
+  );
 
   const onSubmit = async (formValues: DishFormValues) => {
-    setError(null);
+    setErrorMessage(null);
 
-    try {
-      const tagIds = formValues.tags.map((tag) => tag.id);
-      if (tagIds.length === 0) {
-        setError("Wybierz co najmniej 1 tag");
+    const tagIds = formValues.tags.map((tag) => tag.id);
+    if (tagIds.length === 0) {
+      setErrorMessage("Wybierz co najmniej 1 tag");
+      return;
+    }
+
+    if (mode === "create") {
+      const command: DishCreateCommand = {
+        name: formValues.name,
+        tagIds: tagIds as [string, ...string[]],
+        recipeText: formValues.recipeText,
+        url: formValues.url,
+      };
+
+      try {
+        await createDishMutation.mutateAsync(command);
+      } catch {
+        return;
+      }
+    } else {
+      if (!dishId) {
+        setErrorMessage("Brak identyfikatora dania");
         return;
       }
 
-      if (mode === "create") {
-        const command = {
-          name: formValues.name,
-          tagIds: tagIds as [string, ...string[]],
-          recipeText: formValues.recipeText,
-          url: formValues.url,
-        };
+      const command: DishUpdateCommand = {
+        name: formValues.name,
+        tagIds: tagIds as [string, ...string[]],
+        recipeText: formValues.recipeText || null,
+        url: formValues.url || null,
+      };
 
-        const response = await fetch("/api/dishes", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(command),
-        });
-
-        if (response.status === 401) {
-          window.location.href = "/login";
-          return;
-        }
-
-        if (response.status === 422) {
-          const errorData = await response.json().catch(() => ({}));
-          setError(errorData.message || "Sprawdź poprawność danych");
-          return;
-        }
-
-        if (response.status === 429) {
-          setError("Zbyt wiele zapytań. Spróbuj ponownie za chwilę.");
-          return;
-        }
-
-        if (response.status >= 500) {
-          setError("Wystąpił błąd serwera. Spróbuj ponownie za chwilę.");
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error("Nie udało się utworzyć dania");
-        }
-
-        const { data: createdDish } = await response.json();
-        onSuccess(createdDish.id);
-      } else {
-        const command = {
-          name: formValues.name,
-          tagIds: tagIds as [string, ...string[]],
-          recipeText: formValues.recipeText || null,
-          url: formValues.url || null,
-        };
-
-        const response = await fetch(`/api/dishes/${dishId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(command),
-        });
-
-        if (response.status === 401) {
-          window.location.href = "/login";
-          return;
-        }
-
-        if (response.status === 404) {
-          setError("Nie znaleziono dania");
-          return;
-        }
-
-        if (response.status === 422) {
-          const errorData = await response.json().catch(() => ({}));
-          setError(errorData.message || "Sprawdź poprawność danych");
-          return;
-        }
-
-        if (response.status === 429) {
-          setError("Zbyt wiele zapytań. Spróbuj ponownie za chwilę.");
-          return;
-        }
-
-        if (response.status >= 500) {
-          setError("Wystąpił błąd serwera. Spróbuj ponownie za chwilę.");
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error("Nie udało się zaktualizować dania");
-        }
-
-        const { data: updatedDish } = await response.json();
-        onSuccess(updatedDish.id);
+      try {
+        await updateDishMutation.mutateAsync(command);
+      } catch {
+        return;
       }
-    } catch (err) {
-      console.error("Error submitting dish:", err);
-      setError("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
     }
   };
 
@@ -332,6 +253,8 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
       </div>
     );
   }
+
+  const isSubmitting = createDishMutation.isSubmitting || updateDishMutation.isSubmitting;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate data-testid="dish-form">
@@ -350,7 +273,7 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
             aria-invalid={errors.name ? "true" : "false"}
           />
           {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-          <p className="text-xs text-muted-foreground">Nazwa dania (3-80 znaków)</p>
+          <p className="text-xs text-muted-foreground">Nazwa dania (3-80 znakow)</p>
         </div>
 
         {/* Tags Field */}
@@ -367,7 +290,7 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
             isLoading={isLoadingTags}
           />
           {errors.tags && <p className="text-sm text-destructive">{errors.tags.message}</p>}
-          <p className="text-xs text-muted-foreground">Wybierz lub utwórz tagi (2-30 znaków)</p>
+          <p className="text-xs text-muted-foreground">Wybierz lub utworz tagi (2-30 znakow)</p>
         </div>
 
         {/* Recipe Text Field */}
@@ -383,7 +306,7 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
             aria-invalid={errors.recipeText ? "true" : "false"}
           />
           {errors.recipeText && <p className="text-sm text-destructive">{errors.recipeText.message}</p>}
-          <p className="text-xs text-muted-foreground">{watch("recipeText")?.length || 0}/2000 znaków</p>
+          <p className="text-xs text-muted-foreground">{watch("recipeText")?.length || 0}/2000 znakow</p>
         </div>
 
         {/* URL Field */}
@@ -399,11 +322,11 @@ export function DishForm({ mode, dishId, onSuccess, onCancel }: DishFormProps) {
             aria-invalid={errors.url ? "true" : "false"}
           />
           {errors.url && <p className="text-sm text-destructive">{errors.url.message}</p>}
-          <p className="text-xs text-muted-foreground">URL do przepisu (maks. 255 znaków)</p>
+          <p className="text-xs text-muted-foreground">URL do przepisu (maks. 255 znakow)</p>
         </div>
       </div>
 
-      {error && <FormMessage status="error" message={error} onClose={() => setError(null)} />}
+      {errorMessage && <FormMessage status="error" message={errorMessage} onClose={() => setErrorMessage(null)} />}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={isSubmitting} className="flex-1">

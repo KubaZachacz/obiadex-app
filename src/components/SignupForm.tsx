@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/FormMessage";
-import type { AuthSignupCommand } from "@/types";
+import { useMutation } from "@/lib/http/hooks";
+import type { AuthSignupCommand, AuthSignupResponse } from "@/types";
 
 interface SignupFormProps {
   onSuccess?: () => void;
@@ -29,13 +30,10 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
   const emailId = useId();
   const passwordId = useId();
 
-  const [serverError, setServerError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
@@ -44,64 +42,32 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
     },
   });
 
+  const { mutateAsync, isSubmitting, error, reset } = useMutation<AuthSignupResponse, AuthSignupCommand>(
+    "/api/auth/signup",
+    {
+      successMessage: "Konto zostalo utworzone pomyslnie.",
+      onSuccess: () => {
+        setTimeout(() => {
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            window.location.assign("/login");
+          }
+        }, 1500);
+      },
+    }
+  );
+
   const onSubmit = async (values: SignupFormValues) => {
-    setServerError(null);
-    setSuccessMessage(null);
+    const command: AuthSignupCommand = {
+      email: values.email.trim(),
+      password: values.password,
+    };
 
     try {
-      const command: AuthSignupCommand = {
-        email: values.email.trim(),
-        password: values.password,
-      };
-
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(command),
-      });
-
-      if (!response.ok) {
-        if (response.status === 409) {
-          setServerError("Konto z tym adresem email już istnieje. Spróbuj się zalogować.");
-          return;
-        }
-
-        if (response.status === 422) {
-          const errorData = await response.json().catch(() => ({}));
-          const errorMessage = errorData.message || "Sprawdź poprawność danych rejestracji";
-          setServerError(errorMessage);
-          return;
-        }
-
-        if (response.status === 429) {
-          setServerError("Zbyt wiele prób. Spróbuj ponownie za chwilę.");
-          return;
-        }
-
-        if (response.status >= 500) {
-          setServerError("Wystąpił błąd serwera. Spróbuj ponownie za chwilę.");
-          return;
-        }
-
-        setServerError("Wystąpił nieoczekiwany błąd. Spróbuj ponownie.");
-        return;
-      }
-
-      await response.json();
-
-      setSuccessMessage("Konto zostało utworzone pomyślnie! Przekierowywanie...");
-
-      setTimeout(() => {
-        if (onSuccess) {
-          onSuccess();
-        } else {
-          window.location.assign("/login");
-        }
-      }, 1500);
+      await mutateAsync(command);
     } catch {
-      setServerError("Błąd połączenia. Sprawdź połączenie internetowe i spróbuj ponownie.");
+      return;
     }
   };
 
@@ -140,9 +106,7 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
         </div>
       </div>
 
-      {serverError && <FormMessage status="error" message={serverError} onClose={() => setServerError(null)} />}
-
-      {successMessage && <FormMessage status="success" message={successMessage} autoHide={true} />}
+      {error && <FormMessage status="error" message={error.message} onClose={reset} />}
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
         {isSubmitting ? "Tworzenie konta..." : "Załóż konto"}

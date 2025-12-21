@@ -13,6 +13,7 @@ import {
 import type { DishListItemDTO } from "@/types";
 import { Trash2 } from "lucide-react";
 import { EditIcon, ExternalLinkIcon } from "@/components/icons";
+import { useMutation } from "@/lib/http/hooks";
 
 interface DishCardProps {
   dish: DishListItemDTO;
@@ -24,8 +25,17 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
   const hasRecipe = dish.recipeText && dish.recipeText.length > 0;
   const hasUrl = dish.url && dish.url.length > 0;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  const { mutateAsync, isDeleting, error, reset } = useMutation<unknown, { id: string }>(
+    (variables) => `/api/dishes/${variables.id}`,
+    {
+      method: "DELETE",
+      onSuccess: () => {
+        setIsDialogOpen(false);
+        onDeleteSuccess?.(dish.id);
+      },
+    }
+  );
 
   const handleDialogChange = useCallback(
     (open: boolean) => {
@@ -34,44 +44,19 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
       }
       setIsDialogOpen(open);
       if (!open) {
-        setError(null);
+        reset();
       }
     },
-    [isDeleting]
+    [isDeleting, reset]
   );
 
   const handleDelete = useCallback(async () => {
-    setIsDeleting(true);
-    setError(null);
-
     try {
-      const response = await fetch(`/api/dishes/${dish.id}`, {
-        method: "DELETE",
-      });
-
-      if (response.status === 401) {
-        window.location.href = "/login";
-        return;
-      }
-
-      if (response.status === 404) {
-        setError("Nie znaleziono dania");
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error("Nie udało się usunąć dania");
-      }
-
-      setIsDialogOpen(false);
-      onDeleteSuccess?.(dish.id);
-    } catch (err) {
-      console.error("Error deleting dish:", err);
-      setError("Wystąpił błąd podczas usuwania dania");
-    } finally {
-      setIsDeleting(false);
+      await mutateAsync({ id: dish.id });
+    } catch {
+      return;
     }
-  }, [dish.id, onDeleteSuccess]);
+  }, [dish.id, mutateAsync]);
 
   return (
     <>
@@ -84,7 +69,7 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() => handleDialogChange(true)}
-                aria-label={`Usuń danie ${dish.name}`}
+                aria-label={`Usun danie ${dish.name}`}
               >
                 <Trash2 className="size-4 text-red-500" aria-hidden="true" />
               </Button>
@@ -137,7 +122,7 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
 
           {dish.lastUsedDay && (
             <p className="text-xs text-muted-foreground">
-              Ostatnio użyte: {new Date(dish.lastUsedDay).toLocaleDateString("pl-PL")}
+              Ostatnio uzyte: {new Date(dish.lastUsedDay).toLocaleDateString("pl-PL")}
             </p>
           )}
         </CardContent>
@@ -146,16 +131,16 @@ export function DishCard({ dish, onEdit, onDeleteSuccess }: DishCardProps) {
       <Dialog open={isDialogOpen} onOpenChange={handleDialogChange}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Usuń danie</DialogTitle>
-            <DialogDescription>Czy na pewno chcesz usunąć to danie? Tej operacji nie da się cofnąć.</DialogDescription>
+            <DialogTitle>Usun danie</DialogTitle>
+            <DialogDescription>Czy na pewno chcesz usunac to danie? Tej operacji nie da sie cofnac.</DialogDescription>
           </DialogHeader>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error.message}</p>}
           <DialogFooter>
             <Button variant="outline" onClick={() => handleDialogChange(false)} disabled={isDeleting}>
               Anuluj
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? "Usuwanie..." : "Usuń danie"}
+              {isDeleting ? "Usuwanie..." : "Usun danie"}
             </Button>
           </DialogFooter>
         </DialogContent>

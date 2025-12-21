@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormMessage } from "@/components/FormMessage";
+import { useMutation } from "@/lib/http/hooks";
 import type { AuthResetPasswordCommand } from "@/types";
 
 interface ResetPasswordFormProps {
@@ -10,34 +11,38 @@ interface ResetPasswordFormProps {
   defaultEmail?: string;
 }
 
-interface ResetPasswordFormState {
-  email: string;
-  isSubmitting: boolean;
-  error: string | null;
-  success: string | null;
-}
-
 export function ResetPasswordForm({ onSuccess, defaultEmail = "" }: ResetPasswordFormProps) {
   const emailId = useId();
 
-  const [formState, setFormState] = useState<ResetPasswordFormState>({
-    email: defaultEmail,
-    isSubmitting: false,
-    error: null,
-    success: null,
-  });
+  const [email, setEmail] = useState(defaultEmail);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  const validateEmail = (email: string): boolean => {
+  const { mutateAsync, isSubmitting, error, reset } = useMutation<unknown, AuthResetPasswordCommand>(
+    "/api/auth/reset-password",
+    {
+      onSuccess: () => {
+        setSuccessMessage("Jesli konto z tym adresem email istnieje, wyslalismy instrukcje resetu hasla.");
+        if (onSuccess) {
+          setTimeout(() => {
+            onSuccess();
+          }, 3000);
+        }
+      },
+    }
+  );
+
+  const validateEmail = (emailValue: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    return emailRegex.test(emailValue);
   };
 
-  const validateForm = (): string | null => {
-    if (!formState.email.trim()) {
+  const validateForm = (emailValue: string): string | null => {
+    if (!emailValue.trim()) {
       return "Email jest wymagany";
     }
 
-    if (!validateEmail(formState.email)) {
+    if (!validateEmail(emailValue)) {
       return "Podaj poprawny adres email";
     }
 
@@ -47,86 +52,28 @@ export function ResetPasswordForm({ onSuccess, defaultEmail = "" }: ResetPasswor
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // Clear previous messages
-    setFormState((prev) => ({ ...prev, error: null, success: null }));
+    setValidationError(null);
+    setSuccessMessage(null);
+    reset();
 
-    // Validate form
-    const validationError = validateForm();
-    if (validationError) {
-      setFormState((prev) => ({ ...prev, error: validationError }));
+    const validationMessage = validateForm(email);
+    if (validationMessage) {
+      setValidationError(validationMessage);
       return;
     }
 
-    // Submit form
-    setFormState((prev) => ({ ...prev, isSubmitting: true }));
+    const command: AuthResetPasswordCommand = {
+      email: email.trim(),
+    };
 
     try {
-      const command: AuthResetPasswordCommand = {
-        email: formState.email.trim(),
-      };
-
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(command),
-      });
-
-      // Always treat 202 as success (prevents email enumeration)
-      if (response.status === 202) {
-        setFormState((prev) => ({
-          ...prev,
-          isSubmitting: false,
-          success: "Jeśli konto z tym adresem email istnieje, wysłaliśmy instrukcję resetu hasła.",
-        }));
-
-        // Optionally redirect after delay
-        if (onSuccess) {
-          setTimeout(() => {
-            onSuccess();
-          }, 3000);
-        }
-        return;
-      }
-
-      // Handle other status codes
-      if (response.status === 422) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.message || "Sprawdź poprawność adresu email";
-        setFormState((prev) => ({
-          ...prev,
-          isSubmitting: false,
-          error: errorMessage,
-        }));
-        return;
-      }
-
-      if (response.status >= 500) {
-        setFormState((prev) => ({
-          ...prev,
-          isSubmitting: false,
-          error: "Wystąpił błąd serwera. Spróbuj ponownie za chwilę.",
-        }));
-        return;
-      }
-
-      // Generic error
-      setFormState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-        error: "Wystąpił nieoczekiwany błąd. Spróbuj ponownie.",
-      }));
-    } catch (error) {
-      // Network error or JSON parsing error
-      console.error("Reset password error:", error);
-      setFormState((prev) => ({
-        ...prev,
-        isSubmitting: false,
-        error: "Błąd połączenia. Sprawdź połączenie internetowe i spróbuj ponownie.",
-      }));
+      await mutateAsync(command);
+    } catch {
+      return;
     }
   };
+
+  const displayError = validationError ?? error?.message ?? null;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
@@ -139,30 +86,33 @@ export function ResetPasswordForm({ onSuccess, defaultEmail = "" }: ResetPasswor
             name="email"
             autoComplete="email"
             required
-            value={formState.email}
-            onChange={(e) => setFormState((prev) => ({ ...prev, email: e.target.value }))}
-            disabled={formState.isSubmitting}
-            aria-invalid={formState.error ? "true" : "false"}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isSubmitting}
+            aria-invalid={displayError ? "true" : "false"}
             className="w-full"
           />
           <p className="text-xs text-muted-foreground">
-            Wprowadź adres email powiązany z Twoim kontem. Wyślemy Ci link do resetu hasła.
+            Wprowadz adres email powiazany z Twoim kontem. Wyslemy Ci link do resetu hasla.
           </p>
         </div>
       </div>
 
-      {formState.error && (
+      {displayError && (
         <FormMessage
           status="error"
-          message={formState.error}
-          onClose={() => setFormState((prev) => ({ ...prev, error: null }))}
+          message={displayError}
+          onClose={() => {
+            setValidationError(null);
+            reset();
+          }}
         />
       )}
 
-      {formState.success && <FormMessage status="success" message={formState.success} autoHide={false} />}
+      {successMessage && <FormMessage status="success" message={successMessage} autoHide={false} />}
 
-      <Button type="submit" disabled={formState.isSubmitting} className="w-full">
-        {formState.isSubmitting ? "Wysyłanie..." : "Wyślij link do resetu hasła"}
+      <Button type="submit" disabled={isSubmitting} className="w-full">
+        {isSubmitting ? "Wysylanie..." : "Wyslij link do resetu hasla"}
       </Button>
     </form>
   );

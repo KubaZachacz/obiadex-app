@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { DayPlanListItemDTO, DayPlanRangeResponse } from "@/types";
 import { WEEK_NAV_OFFSETS } from "@/lib/date/constants";
 import { formatDateISO, getWeekStart, getWeekEnd, addDays, addWeeks } from "@/lib/date/utils";
+import { useQuery } from "@/lib/http/hooks";
 
 export interface WeekViewport {
   weekIndex: number;
@@ -36,11 +37,7 @@ function getIsMobile(): boolean {
 export function useWeekViewport(): UseWeekViewportReturn {
   const [weekIndex, setWeekIndex] = useState(0);
   const [dayPlans, setDayPlans] = useState<Record<string, DayPlanListItemDTO>>({});
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate viewport based on weekIndex - check mobile on each call
   const calculateViewport = useCallback((index: number): WeekViewport => {
@@ -57,12 +54,12 @@ export function useWeekViewport(): UseWeekViewportReturn {
     let prefetchEnd: string;
 
     if (isMobile) {
-      // Mobile: ±2 days from visible range
+      // Mobile: +/-2 days from visible range
       const { prevDays, nextDays } = WEEK_NAV_OFFSETS.mobile;
       prefetchStart = formatDateISO(addDays(weekStart, -prevDays));
       prefetchEnd = formatDateISO(addDays(weekEnd, nextDays));
     } else {
-      // Desktop: ±1 week from visible range
+      // Desktop: +/-1 week from visible range
       const { prevWeeks, nextWeeks } = WEEK_NAV_OFFSETS.desktop;
       prefetchStart = formatDateISO(addWeeks(weekStart, -prevWeeks));
       prefetchEnd = formatDateISO(addWeeks(weekEnd, nextWeeks));
@@ -79,7 +76,7 @@ export function useWeekViewport(): UseWeekViewportReturn {
 
   const [viewport, setViewport] = useState<WeekViewport>(() => calculateViewport(0));
 
-  // Update viewport when weekIndex changes or window resizes (mobile ↔ desktop)
+  // Update viewport when weekIndex changes or window resizes (mobile <-> desktop)
   useEffect(() => {
     setViewport(calculateViewport(weekIndex));
 
@@ -91,102 +88,42 @@ export function useWeekViewport(): UseWeekViewportReturn {
     return () => window.removeEventListener("resize", handleResize);
   }, [weekIndex, calculateViewport]);
 
-  // Fetch day plans for the current viewport
-  const fetchDayPlans = useCallback(
-    async (signal: AbortSignal) => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  const dayPlansUrl = useMemo(() => {
+    const params = new URLSearchParams({
+      start: viewport.prefetchStart,
+      end: viewport.prefetchEnd,
+      sort: "asc",
+    });
 
-        const params = new URLSearchParams({
-          start: viewport.prefetchStart,
-          end: viewport.prefetchEnd,
-          sort: "asc",
-        });
+    return `/api/day-plans?${params.toString()}`;
+  }, [viewport.prefetchEnd, viewport.prefetchStart]);
 
-        const response = await fetch(`/api/day-plans?${params.toString()}`, {
-          signal,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            window.location.href = "/login";
-            return;
-          }
-          throw new Error(`Failed to fetch day plans: ${response.status}`);
-        }
-
-        const data: DayPlanRangeResponse = await response.json();
-
-        // Convert array to cache map
-        const cache: Record<string, DayPlanListItemDTO> = {};
-        for (const plan of data.data) {
-          cache[plan.day] = plan;
-        }
-
-        setDayPlans(cache);
-      } catch (err) {
-        if (err instanceof Error) {
-          if (err.name === "AbortError") return;
-          setError(err.message);
-        } else {
-          setError("An unexpected error occurred");
-        }
-      } finally {
-        setIsLoading(false);
+  const dayPlansQuery = useQuery<DayPlanRangeResponse>(dayPlansUrl, {
+    debounce: 300,
+    onSuccess: (data) => {
+      setError(null);
+      const cache: Record<string, DayPlanListItemDTO> = {};
+      for (const plan of data.data) {
+        cache[plan.day] = plan;
       }
+      setDayPlans(cache);
     },
-    [viewport.prefetchStart, viewport.prefetchEnd]
-  );
-
-  // Debounced fetch effect
-  useEffect(() => {
-    // Abort previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Clear previous debounce timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    // Create new abort controller
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-
-    // Debounce fetch by 300ms
-    debounceTimerRef.current = setTimeout(() => {
-      fetchDayPlans(controller.signal);
-    }, 300);
-
-    return () => {
-      controller.abort();
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [fetchDayPlans]);
-
-  const refetch = useCallback(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    fetchDayPlans(controller.signal);
-  }, [fetchDayPlans]);
+    onError: (apiError) => {
+      setError(apiError.message);
+    },
+  });
 
   return {
     weekIndex,
     viewport,
     dayPlans,
-    isLoading,
+    isLoading: dayPlansQuery.isLoading,
     error,
     setWeekIndex,
-    refetch,
+    refetch: () => {
+      dayPlansQuery.refetch().catch(() => {
+        return;
+      });
+    },
   };
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChefHat, LogOut, Utensils, Menu, X } from "lucide-react";
+import { useMutation } from "@/lib/http/hooks";
 
 interface HeaderProps {
   currentPath?: string;
@@ -12,17 +13,14 @@ interface HeaderProps {
 export function Header({ currentPath = "/" }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const { mutateAsync } = useMutation<unknown, undefined>("/api/auth/logout");
+
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/auth/logout", {
-        method: "POST",
-      });
-
-      if (response.ok) {
-        window.location.href = "/login";
-      }
-    } catch (error) {
-      console.error("Logout failed:", error);
+      await mutateAsync(undefined);
+      window.location.href = "/login";
+    } catch {
+      return;
     }
   };
 

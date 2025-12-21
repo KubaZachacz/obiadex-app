@@ -24,6 +24,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { isToday, parseDateISO } from "@/lib/date/utils";
+import { useMutation, useQuery } from "@/lib/http/hooks";
 
 interface DayPlanOverlayProps {
   day: string | null;
@@ -44,18 +45,43 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [mode, setMode] = useState<OverlayMode>("edit");
   const [existingPlan, setExistingPlan] = useState<DayPlanDTO | null>(null);
-  const [isLoadingPlan, setIsLoadingPlan] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const isOpen = day !== null;
 
-  const { state, allTags, isLoadingTags, selectDish, setSelectedTags, setNameSearch, saveDayPlan, refetchDishes } =
-    useDishPicker(day || "");
+  const {
+    state,
+    allTags,
+    isLoadingTags,
+    isLoadingDishes,
+    error: dishPickerError,
+    selectDish,
+    setSelectedTags,
+    setNameSearch,
+    saveDayPlan,
+    refetchDishes,
+  } = useDishPicker(day || "");
   const latestRefetchDishes = useRef(refetchDishes);
 
   // Keep the refetch function reference up to date without retriggering other effects
   useEffect(() => {
     latestRefetchDishes.current = refetchDishes;
   }, [refetchDishes]);
+
+  const { isLoading: isLoadingPlan } = useQuery<{ data: DayPlanDTO }>(day ? `/api/day-plans/${day}` : null, {
+    enabled: !!day,
+    onSuccess: (response) => {
+      setExistingPlan(response.data);
+      setMode("view");
+    },
+    onError: (apiError) => {
+      if (apiError.status === 404) {
+        setExistingPlan(null);
+        setMode("edit");
+        return;
+      }
+      setExistingPlan(null);
+      setMode("edit");
+    },
+  });
 
   // Fetch existing day plan when overlay opens
   useEffect(() => {
@@ -65,36 +91,19 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
       return;
     }
 
-    const fetchDayPlan = async () => {
-      setIsLoadingPlan(true);
-      try {
-        const response = await fetch(`/api/day-plans/${day}`);
-        if (response.ok) {
-          const data = await response.json();
-          setExistingPlan(data.data);
-          setMode("view");
-        } else if (response.status === 404) {
-          // No plan exists, go to edit mode
-          setExistingPlan(null);
-          setMode("edit");
-        } else {
-          console.error("Failed to fetch day plan:", response.statusText);
-          setExistingPlan(null);
-          setMode("edit");
-        }
-      } catch (error) {
-        console.error("Error fetching day plan:", error);
-        setExistingPlan(null);
-        setMode("edit");
-      } finally {
-        setIsLoadingPlan(false);
-      }
-    };
-
-    fetchDayPlan();
-    // Refetch dishes when overlay opens
     latestRefetchDishes.current();
   }, [day]);
+
+  const deleteDayPlanMutation = useMutation<unknown, { day: string }>(
+    (variables) => `/api/day-plans/${variables.day}`,
+    {
+      method: "DELETE",
+      onSuccess: () => {
+        onSaved();
+        onClose();
+      },
+    }
+  );
 
   // Detect mobile viewport
   useEffect(() => {
@@ -122,22 +131,10 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
   const handleDelete = async () => {
     if (!day) return;
 
-    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/day-plans/${day}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok || response.status === 204) {
-        onSaved();
-        onClose();
-      } else {
-        console.error("Failed to delete day plan:", response.statusText);
-      }
-    } catch (error) {
-      console.error("Error deleting day plan:", error);
-    } finally {
-      setIsDeleting(false);
+      await deleteDayPlanMutation.mutateAsync({ day });
+    } catch {
+      return;
     }
   };
 
@@ -161,7 +158,7 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
   };
 
   const title = day ? formatDayTitle(day) : "";
-  const description = mode === "view" ? "Szczegóły dania" : "Wybierz danie dla tego dnia";
+  const description = mode === "view" ? "Szczegoly dania" : "Wybierz danie dla tego dnia";
 
   const emptyVariant = state.tags.length === 0 && state.dishes.length === 0 ? "no-data" : "no-results";
 
@@ -174,13 +171,18 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
       <Skeleton className="h-10 w-full" />
     </div>
   ) : mode === "view" && existingPlan ? (
-    <DayPlanDetailsView dayPlan={existingPlan} onEdit={handleEdit} onDelete={handleDelete} isDeleting={isDeleting} />
+    <DayPlanDetailsView
+      dayPlan={existingPlan}
+      onEdit={handleEdit}
+      onDelete={handleDelete}
+      isDeleting={deleteDayPlanMutation.isDeleting}
+    />
   ) : (
     <div className="flex h-full flex-col gap-3">
       <div className="flex-shrink-0 space-y-3">
         <Input
           type="text"
-          placeholder="🔍 Szukaj dania po nazwie..."
+          placeholder="Szukaj dania po nazwie..."
           value={state.nameSearch}
           onChange={(e) => setNameSearch(e.target.value)}
           className="h-11"
@@ -198,14 +200,14 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
       <div className="min-h-0 flex-1">
         <DishPickerList
           items={state.dishes}
-          isLoading={state.status === "loading"}
+          isLoading={isLoadingDishes}
           onSelect={selectDish}
           selectedId={state.selectedId}
           emptyVariant={emptyVariant}
         />
       </div>
 
-      {state.error && <div className="flex-shrink-0 text-sm text-destructive">{state.error}</div>}
+      {dishPickerError && <div className="flex-shrink-0 text-sm text-destructive">{dishPickerError}</div>}
     </div>
   );
 

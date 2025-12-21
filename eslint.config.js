@@ -34,27 +34,34 @@ const jsxA11yConfig = tseslint.config({
   },
 });
 
-const reactConfig = tseslint.config({
-  files: ["**/*.{js,jsx,ts,tsx}"],
-  extends: [pluginReact.configs.flat.recommended],
-  languageOptions: {
-    ...pluginReact.configs.flat.recommended.languageOptions,
-    globals: {
-      window: true,
-      document: true,
+const reactConfig = tseslint.config(
+  {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    extends: [pluginReact.configs.flat.recommended],
+    languageOptions: {
+      ...pluginReact.configs.flat.recommended.languageOptions,
+      globals: {
+        window: true,
+        document: true,
+      },
+    },
+    plugins: {
+      "react-hooks": eslintPluginReactHooks,
+      "react-compiler": reactCompiler,
+    },
+    settings: { react: { version: "detect" } },
+    rules: {
+      ...eslintPluginReactHooks.configs.recommended.rules,
+      "react/react-in-jsx-scope": "off",
+      "react-compiler/react-compiler": "error",
     },
   },
-  plugins: {
-    "react-hooks": eslintPluginReactHooks,
-    "react-compiler": reactCompiler,
-  },
-  settings: { react: { version: "detect" } },
-  rules: {
-    ...eslintPluginReactHooks.configs.recommended.rules,
-    "react/react-in-jsx-scope": "off",
-    "react-compiler/react-compiler": "error",
-  },
-});
+  {
+    rules: {
+      "no-console": "off",
+    },
+  }
+);
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
