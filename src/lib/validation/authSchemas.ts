@@ -4,7 +4,12 @@ import { z } from "zod";
  * Email validation schema
  * Normalized to lowercase and trimmed
  */
-const emailSchema = z.string().email("Invalid email format").max(255).trim().toLowerCase();
+const emailSchema = z
+  .string()
+  .email("Nieprawidłowy format adresu email")
+  .max(255, "Email nie może mieć więcej niż 255 znaków")
+  .trim()
+  .toLowerCase();
 
 /**
  * Password validation schema
@@ -12,8 +17,8 @@ const emailSchema = z.string().email("Invalid email format").max(255).trim().toL
  */
 const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters")
-  .max(256, "Password must be at most 256 characters");
+  .min(8, "Hasło musi mieć co najmniej 8 znaków")
+  .max(256, "Hasło nie może przekraczać 256 znaków");
 
 /**
  * Validation schema for POST /auth/signup

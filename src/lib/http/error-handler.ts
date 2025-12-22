@@ -3,17 +3,24 @@ import { toast } from "sonner";
 import type { ApiError } from "./types";
 
 const ERROR_MESSAGES: Record<number, string> = {
-  401: "Sesja wygasla. Zaloguj sie ponownie.",
-  403: "Brak dostepu do zasobu.",
+  401: "Sesja wygasła. Zaloguj się ponownie.",
+  403: "Brak dostępu do zasobu.",
   404: "Nie znaleziono zasobu.",
-  409: "Zasob juz istnieje.",
-  422: "Nieprawidlowe dane.",
-  429: "Zbyt wiele prob. Sprobuj ponownie pozniej.",
-  500: "Wystapil blad serwera. Sprobuj ponownie pozniej.",
-  503: "Usluga chwilowo niedostepna. Sprobuj ponownie pozniej.",
+  409: "Zasób już istnieje.",
+  422: "Nieprawidłowe dane.",
+  429: "Zbyt wiele prób. Spróbuj ponownie później.",
+  500: "Wystąpił błąd serwera. Spróbuj ponownie później.",
+  503: "Usługa chwilowo niedostępna. Spróbuj ponownie później.",
 };
 
-export function handleApiError(error: unknown, showToast = true): ApiError {
+interface HandleApiErrorOptions {
+  showToast?: boolean;
+  redirectOnUnauthorized?: boolean;
+}
+
+export function handleApiError(error: unknown, options: HandleApiErrorOptions = {}): ApiError {
+  const { showToast = true, redirectOnUnauthorized = true } = options;
+
   if (axios.isAxiosError(error)) {
     const status = error.response?.status;
     const responseData = error.response?.data as
@@ -28,9 +35,9 @@ export function handleApiError(error: unknown, showToast = true): ApiError {
       responseData?.message ||
       responseData?.error ||
       (status ? ERROR_MESSAGES[status] : undefined) ||
-      "Wystapil nieoczekiwany blad.";
+      "Wystąpił nieoczekiwany błąd.";
 
-    if (status === 401 && typeof window !== "undefined") {
+    if (status === 401 && redirectOnUnauthorized && typeof window !== "undefined") {
       window.location.assign("/login");
     }
 
@@ -46,7 +53,7 @@ export function handleApiError(error: unknown, showToast = true): ApiError {
     };
   }
 
-  const fallbackMessage = error instanceof Error ? error.message : "Wystapil nieoczekiwany blad.";
+  const fallbackMessage = error instanceof Error ? error.message : "Wystąpił nieoczekiwany błąd.";
   if (showToast) {
     toast.error(fallbackMessage);
   }

@@ -26,6 +26,7 @@ export interface UseMutationOptions<TData, TVariables> {
   onError?: (error: ApiError, variables: TVariables) => void;
   successMessage?: string;
   showErrorToast?: boolean;
+  redirectOnUnauthorized?: boolean;
 }
 
 export interface UseMutationResult<TData, TVariables> {

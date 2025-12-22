@@ -26,7 +26,7 @@ export async function POST(context: APIContext): Promise<Response> {
             expected: "object",
             received: "undefined",
             path: [],
-            message: "Invalid JSON body",
+            message: "Nieprawidłowy format danych JSON",
           },
         ],
       } as unknown as import("zod").ZodError);
@@ -49,7 +49,7 @@ export async function POST(context: APIContext): Promise<Response> {
 
       // Handle duplicate email
       if (err.code === "DUPLICATE_EMAIL" || err.status === 409) {
-        return respondConflict("Email already exists");
+        return respondConflict("Email już istnieje");
       }
 
       // Handle other errors

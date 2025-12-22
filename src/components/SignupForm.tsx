@@ -42,16 +42,26 @@ export function SignupForm({ onSuccess, defaultEmail = "" }: SignupFormProps) {
     },
   });
 
+  const redirectToLogin = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const loginUrl = new URL("/login", window.location.origin);
+    loginUrl.searchParams.set("info", "confirm-email");
+    window.location.assign(loginUrl.toString());
+  };
+
   const { mutateAsync, isSubmitting, error, reset } = useMutation<AuthSignupResponse, AuthSignupCommand>(
     "/api/auth/signup",
     {
-      successMessage: "Konto zostalo utworzone pomyslnie.",
+      successMessage: "Konto zostało utworzone. Sprawdź e-mail z linkiem potwierdzającym.",
       onSuccess: () => {
         setTimeout(() => {
           if (onSuccess) {
             onSuccess();
           } else {
-            window.location.assign("/login");
+            redirectToLogin();
           }
         }, 1500);
       },

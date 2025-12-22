@@ -27,7 +27,7 @@ function jsonResponse(data: unknown, status: number, headers?: HeadersInit): Res
 export function respondValidationError(zodError: ZodError): Response {
   return jsonResponse(
     {
-      error: "Validation failed",
+      error: "Walidacja nie powiodła się",
       details: zodError.issues,
     } satisfies ErrorResponse,
     400
@@ -49,10 +49,10 @@ export function respondUnprocessableEntity(message: string): Response {
 /**
  * Returns a 401 Unauthorized response
  */
-export function respondUnauthorized(): Response {
+export function respondUnauthorized(message = "Brak dostępu"): Response {
   return jsonResponse(
     {
-      error: "Unauthorized",
+      error: message,
     } satisfies ErrorResponse,
     401
   );
@@ -61,7 +61,7 @@ export function respondUnauthorized(): Response {
 /**
  * Returns a 404 Not Found response
  */
-export function respondNotFound(message = "Resource not found"): Response {
+export function respondNotFound(message = "Nie znaleziono zasobu"): Response {
   return jsonResponse(
     {
       error: message,
@@ -85,7 +85,7 @@ export function respondConflict(message: string): Response {
 /**
  * Returns a 500 Internal Server Error response
  */
-export function respondInternalError(message = "Internal server error"): Response {
+export function respondInternalError(message = "Wewnętrzny błąd serwera"): Response {
   return jsonResponse(
     {
       error: message,
@@ -100,7 +100,7 @@ export function respondInternalError(message = "Internal server error"): Respons
 export function respondDbError(error: { code?: string; message: string }): Response {
   // PostgreSQL error code 23505: unique_violation
   if (error.code === "23505") {
-    return respondConflict("Resource conflict: duplicate entry");
+    return respondConflict("Zasób już istnieje");
   }
 
   // PostgreSQL error code PGRST116: no rows returned (from .single())

@@ -43,7 +43,10 @@ export async function login(supabase: SupabaseClient, command: AuthLoginCommand)
   if (error) {
     // Check for invalid credentials
     if (error.message?.includes("Invalid") || error.message?.includes("credentials")) {
-      const authError = new Error("Invalid email or password") as Error & { code: string; status: number };
+      const authError = new Error("Nieprawidłowy login lub hasło") as Error & {
+        code: string;
+        status: number;
+      };
       authError.code = "INVALID_CREDENTIALS";
       authError.status = 401;
       throw authError;

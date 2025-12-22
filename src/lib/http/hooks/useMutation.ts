@@ -40,7 +40,10 @@ export function useMutation<TData, TVariables>(
           throw err;
         }
 
-        const apiError = handleApiError(err, options.showErrorToast !== false);
+        const apiError = handleApiError(err, {
+          showToast: options.showErrorToast !== false,
+          redirectOnUnauthorized: options.redirectOnUnauthorized ?? true,
+        });
         setError(apiError);
         options.onError?.(apiError, variables);
         throw err;

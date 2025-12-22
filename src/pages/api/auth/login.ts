@@ -26,7 +26,7 @@ export async function POST(context: APIContext): Promise<Response> {
             expected: "object",
             received: "undefined",
             path: [],
-            message: "Invalid JSON body",
+            message: "Nieprawidłowy format danych JSON",
           },
         ],
       } as unknown as import("zod").ZodError);
@@ -49,7 +49,7 @@ export async function POST(context: APIContext): Promise<Response> {
 
       // Handle invalid credentials
       if (err.code === "INVALID_CREDENTIALS" || err.status === 401) {
-        return respondUnauthorized();
+        return respondUnauthorized("Nieprawidłowy login lub hasło");
       }
 
       // Handle other errors

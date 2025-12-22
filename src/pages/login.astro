@@ -2,6 +2,9 @@
 import Layout from "@/layouts/Layout.astro";
 import AuthPageLayout from "@/components/AuthPageLayout.astro";
 import { LoginForm } from "@/components/LoginForm";
+import { InfoIcon } from "@/components/icons";
+
+const showConfirmationReminder = Astro.url.searchParams.get("info") === "confirm-email";
 ---
 
 <Layout title="Logowanie - Obiadex">
@@ -13,6 +16,23 @@ import { LoginForm } from "@/components/LoginForm";
       { href: "/signup", label: "Nie masz konta? Załóż konto" },
     ]}
   >
+    {
+      showConfirmationReminder && (
+        <div
+          role="status"
+          aria-live="polite"
+          class="mb-6 rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800"
+        >
+          <div class="flex items-start gap-3">
+            <InfoIcon class="h-5 w-5 text-blue-500" aria-hidden="true" />
+            <p class="flex-1">
+              Wysłaliśmy na Twój adres e-mail wiadomość z linkiem potwierdzającym. Kliknij w nią, zanim spróbujesz się
+              zalogować.
+            </p>
+          </div>
+        </div>
+      )
+    }
     <LoginForm client:load />
   </AuthPageLayout>
 </Layout>

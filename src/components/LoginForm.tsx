@@ -16,7 +16,7 @@ interface LoginFormProps {
 
 const loginFormSchema = z.object({
   email: z.string().trim().min(1, "Email jest wymagany").email("Podaj poprawny adres email"),
-  password: z.string().min(8, "Hasło musi mieć co najmniej 8 znaków"),
+  password: z.string(),
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
@@ -47,6 +47,7 @@ export function LoginForm({ onSuccess, defaultEmail = "" }: LoginFormProps) {
           window.location.assign("/");
         }
       },
+      redirectOnUnauthorized: false,
     }
   );
 
