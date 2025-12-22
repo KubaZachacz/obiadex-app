@@ -45,7 +45,7 @@ export async function GET(context: APIContext): Promise<Response> {
     const dayPlan = await getByDay(supabase, user.id, day);
 
     if (!dayPlan) {
-      return respondNotFound("Day plan not found");
+      return respondOk({ data: null });
     }
 
     return respondOk({ data: dayPlan });

@@ -66,11 +66,12 @@ export function DayPlanOverlay({ day, onClose, onSaved }: DayPlanOverlayProps) {
     latestRefetchDishes.current = refetchDishes;
   }, [refetchDishes]);
 
-  const { isLoading: isLoadingPlan } = useQuery<{ data: DayPlanDTO }>(day ? `/api/day-plans/${day}` : null, {
+  const { isLoading: isLoadingPlan } = useQuery<{ data: DayPlanDTO | null }>(day ? `/api/day-plans/${day}` : null, {
     enabled: !!day,
     onSuccess: (response) => {
-      setExistingPlan(response.data);
-      setMode("view");
+      const dayPlan = response.data ?? null;
+      setExistingPlan(dayPlan);
+      setMode(dayPlan ? "view" : "edit");
     },
     onError: (apiError) => {
       if (apiError.status === 404) {
