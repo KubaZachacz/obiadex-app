@@ -108,10 +108,10 @@ export function WelcomeModal() {
 
         <DialogFooter className="mt-6 flex justify-between gap-2">
           <Button data-testid="welcome-modal-close" variant="ghost" onClick={closeModal}>
-            Close
+            Zamknij
           </Button>
           <Button data-testid="welcome-modal-next" onClick={goToNext}>
-            {pageIndex === slides.length - 1 ? "Finish" : "Next"}
+            {pageIndex === slides.length - 1 ? "Gotowe" : "Dalej"}
           </Button>
         </DialogFooter>
       </DialogContent>
