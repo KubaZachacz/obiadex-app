@@ -16,12 +16,22 @@ test("happy path: create dish, plan it for today, clean up, logout", async ({ pa
 
   test.skip(!email || !password, "Missing TEST_USER or TEST_USER_PASSWORD in env.");
 
+  if (!email || !password) {
+    return;
+  }
+
   await page.goto("/login");
   await page.getByTestId("login-email").fill(email);
   await page.getByTestId("login-password").fill(password);
   await page.getByTestId("login-submit").click();
 
   await expect(page).toHaveURL(/\/(?:\?|$)/);
+
+  const welcomeModal = page.getByTestId("welcome-modal");
+  if ((await welcomeModal.count()) > 0 && (await welcomeModal.isVisible())) {
+    await page.getByTestId("welcome-modal-close").click();
+    await expect(welcomeModal).toBeHidden();
+  }
 
   await page.getByTestId("nav-dishes").click();
   await expect(page).toHaveURL(/\/dishes(?:\?|$)/);

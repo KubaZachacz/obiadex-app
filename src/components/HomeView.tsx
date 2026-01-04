@@ -6,6 +6,7 @@ import { DayWeekView } from "./DayWeekView";
 import { DayPlanOverlay } from "./DayPlanOverlay";
 import { DishEditorOverlay } from "./DishEditorOverlay";
 import { FAB } from "./FAB";
+import { WelcomeModal } from "./WelcomeModal";
 
 /**
  * HomeView component - main view for weekly day plan list.
@@ -95,6 +96,8 @@ export function HomeView() {
       <DishEditorOverlay mode="create" isOpen={isAddDishOpen} onClose={closeAddDish} />
 
       <FAB onClick={handleAddDish} label="Dodaj danie" />
+
+      <WelcomeModal />
     </div>
   );
 }
