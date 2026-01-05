@@ -1,247 +1,223 @@
 [
   {
     "name": "Schabowy z ziemniakami",
-    "tags": ["mięsne", "szybkie", "comfort food"],
+    "tags": ["mięsne", "ziemniaki", "kuchnia polska"],
     "recipeText": "Klasyczny kotlet schabowy smażony na złoto."
   },
   {
-    "name": "Pierogi ruskie",
-    "tags": ["vege", "comfort food"],
-    "recipeText": "Pierogi nadziewane twarogiem i ziemniakami."
-  },
-  {
-    "name": "Żurek",
-    "tags": ["zupa", "mięsne"],
-    "recipeText": "Kwaśna zupa na zakwasie z kiełbasą."
-  },
-  {
-    "name": "Pomidorowa",
-    "tags": ["zupa", "vege"],
-    "recipeText": "Zupa na bazie pomidorów z makaronem lub ryżem."
-  },
-  {
-    "name": "Łosoś pieczony z cytryną",
-    "tags": ["ryba", "fit"],
-    "recipeText": "Soczysty łosoś pieczony w folii z przyprawami."
-  },
-  {
-    "name": "Spaghetti Bolognese",
-    "tags": ["makaron", "mięsne"],
-    "recipeText": "Włoski makaron z sosem mięsnym."
-  },
-  {
-    "name": "Spaghetti Carbonara",
-    "tags": ["makaron", "szybkie"],
-    "recipeText": "Makaron z sosem jajeczno-serowym."
-  },
-  {
-    "name": "Smażony dorsz w cieście",
-    "tags": ["ryba", "fast food"],
-    "recipeText": "Chrupiący dorsz w panierce, idealny z frytkami."
-  },
-  {
-    "name": "Kopytka",
-    "tags": ["vege", "comfort food"],
-    "recipeText": "Delikatne kluseczki ziemniaczane."
-  },
-  {
-    "name": "Naleśniki z serem",
-    "tags": ["vege", "szybkie"],
-    "recipeText": "Słodkie naleśniki z nadzieniem serowym."
-  },
-  {
-    "name": "Tacos wołowe",
-    "tags": ["mięsne", "street food"],
-    "recipeText": "Chrupiące tortille wypełnione pikantną wołowiną."
-  },
-  {
-    "name": "Chili sin carne",
-    "tags": ["vege", "fit"],
-    "recipeText": "Warzywna wersja chili z fasolą."
-  },
-  {
-    "name": "Chili con carne",
-    "tags": ["mięsne"],
-    "recipeText": "Pikantna potrawka z mięsem i fasolą."
-  },
-  {
-    "name": "Krem z dyni",
-    "tags": ["zupa", "vege"],
-    "recipeText": "Aksamitny krem dyniowy z imbirem."
-  },
-  {
-    "name": "Krem brokułowy",
-    "tags": ["zupa", "vege"],
-    "recipeText": "Gładki krem z brokułów i sera."
-  },
-  {
-    "name": "Gulasz wołowy",
-    "tags": ["mięsne", "comfort food"],
-    "recipeText": "Aromatyczny, długo duszony gulasz."
-  },
-  {
-    "name": "Sushi maki",
-    "tags": ["ryba", "fit"],
-    "recipeText": "Rolki ryżu z nori i świeżą rybą."
-  },
-  {
-    "name": "Kasia po tajsku z tofu",
-    "tags": ["vege", "fit"],
-    "recipeText": "Warzywa i tofu w kokosowym sosie curry."
-  },
-  {
-    "name": "Kurczak curry",
-    "tags": ["mięsne"],
-    "recipeText": "Soczysty kurczak w kremowym sosie curry."
-  },
-  {
-    "name": "Frytki z piekarnika",
-    "tags": ["fast food", "vege"],
-    "recipeText": "Chrupiące pieczone frytki."
-  },
-  {
-    "name": "Burger wołowy",
-    "tags": ["mięsne", "fast food"],
-    "recipeText": "Klasyczny burger z wołowiną i dodatkami."
-  },
-  {
-    "name": "Burger vege",
-    "tags": ["vege", "fast food"],
-    "recipeText": "Burger na bazie warzyw lub strączków."
-  },
-  {
-    "name": "Pizza Margherita",
-    "tags": ["vege", "fast food"],
-    "recipeText": "Klasyczna włoska pizza z mozzarellą."
-  },
-  {
-    "name": "Pizza pepperoni",
-    "tags": ["mięsne", "fast food"],
-    "recipeText": "Pizza z pikantną kiełbasą pepperoni."
-  },
-  {
-    "name": "Kluski śląskie",
-    "tags": ["vege", "comfort food"],
-    "recipeText": "Miękkie kluski z charakterystyczną dziurką."
-  },
-  {
-    "name": "Sajgonki smażone",
-    "tags": ["street food", "szybkie"],
-    "recipeText": "Chrupiące sajgonki z farszem warzywno-mięsnym."
-  },
-  {
-    "name": "Falafel",
-    "tags": ["vege", "street food"],
-    "recipeText": "Smażone kulki z ciecierzycy."
-  },
-  {
-    "name": "Ryż smażony z warzywami",
-    "tags": ["vege", "szybkie"],
-    "recipeText": "Szybkie danie z ryżu i warzyw."
-  },
-  {
-    "name": "Pad Thai",
-    "tags": ["makaron", "street food"],
-    "recipeText": "Smażony makaron ryżowy z dodatkami."
-  },
-  {
-    "name": "Makaron ze szpinakiem i fetą",
-    "tags": ["makaron", "vege"],
-    "recipeText": "Makaron w kremowym sosie szpinakowym."
-  },
-  {
-    "name": "Mintaj z patelni",
-    "tags": ["ryba", "szybkie"],
-    "recipeText": "Lekko podsmażany filet z mintaja."
-  },
-  {
-    "name": "Dorsz pieczony w warzywach",
-    "tags": ["ryba", "fit"],
-    "recipeText": "Delikatny dorsz pieczony z warzywami."
-  },
-  {
-    "name": "Zapiekanka ziemniaczana",
-    "tags": ["vege", "comfort food"],
-    "recipeText": "Zapiekane ziemniaki z serem i cebulą."
-  },
-  {
-    "name": "Zapiekanka z kurczakiem",
-    "tags": ["mięsne"],
-    "recipeText": "Syta zapiekanka z makaronem i kurczakiem."
-  },
-  {
-    "name": "Sałatka grecka",
-    "tags": ["vege", "fit"],
-    "recipeText": "Sałatka z fetą, oliwkami i warzywami."
-  },
-  {
-    "name": "Sałatka z tuńczykiem",
-    "tags": ["ryba", "fit"],
-    "recipeText": "Lekka sałatka z tuńczykiem i jajkiem."
-  },
-  {
-    "name": "Mrożone pierogi z mięsem",
-    "tags": ["mrożonki", "mięsne"],
-    "recipeText": "Gotowe pierogi do szybkiego przygotowania."
-  },
-  {
-    "name": "Mrożona lasagne",
-    "tags": ["mrożonki", "mięsne"],
-    "recipeText": "Lasagne do podgrzania w piekarniku."
-  },
-  {
-    "name": "Mrożone warzywa na patelnię",
-    "tags": ["mrożonki", "vege"],
-    "recipeText": "Szybkie mieszanki warzywne z patelni."
-  },
-  {
-    "name": "Shakshuka",
-    "tags": ["vege", "szybkie"],
-    "recipeText": "Jajka gotowane w sosie pomidorowym."
-  },
-  {
-    "name": "Tortilla z kurczakiem",
-    "tags": ["mięsne", "street food"],
-    "recipeText": "Rolowana tortilla z kurczakiem i warzywami."
-  },
-  {
-    "name": "Tortilla vege",
-    "tags": ["vege", "street food"],
-    "recipeText": "Lekka tortilla z hummusem i warzywami."
-  },
-  {
-    "name": "Krewetki smażone na maśle",
-    "tags": ["ryba", "szybkie"],
-    "recipeText": "Krewetki podsmażane z czosnkiem i masłem."
-  },
-  {
-    "name": "Ramen",
-    "tags": ["zupa"],
-    "recipeText": "Japońska zupa z makaronem i dodatkami."
-  },
-  {
-    "name": "Barszcz czerwony",
-    "tags": ["zupa", "vege"],
-    "recipeText": "Tradycyjny barszcz z buraków."
-  },
-  {
-    "name": "Gołąbki",
-    "tags": ["mięsne", "comfort food"],
-    "recipeText": "Kapusta faszerowana mięsem i ryżem."
+    "name": "Kotlety mielone",
+    "tags": ["mięsne", "smażone", "kuchnia polska"],
+    "recipeText": "Mielone kotlety z cebulką."
   },
   {
     "name": "Placki ziemniaczane",
-    "tags": ["vege", "street food"],
+    "tags": ["wege", "ziemniaki", "smażone"],
     "recipeText": "Chrupiące placki z tartych ziemniaków."
   },
   {
-    "name": "Stir-fry z kurczakiem",
-    "tags": ["mięsne", "fit"],
-    "recipeText": "Smażone warzywa z kurczakiem w woku."
+    "name": "Pierogi mrożone",
+    "tags": ["mrożonki", "mączne", "kuchnia polska"],
+    "recipeText": "Gotowe pierogi do szybkiego przygotowania."
+  },
+  { "name": "Zupa pomidorowa", "tags": ["zupa", "wege", "szybkie"], "recipeText": "Pomidorowa z makaronem lub ryżem." },
+  {
+    "name": "Zupa ogórkowa",
+    "tags": ["zupa", "wege", "kuchnia polska"],
+    "recipeText": "Kwaśna zupa na ogórkach kiszonych."
+  },
+  { "name": "Rosół", "tags": ["zupa", "mięsne", "klasyczne"], "recipeText": "Długo gotowany rosół drobiowy." },
+  { "name": "Żurek", "tags": ["zupa", "mięsne", "kuchnia polska"], "recipeText": "Żur na zakwasie z kiełbasą." },
+  { "name": "Grochówka", "tags": ["zupa", "mięsne", "jednogarnkowe"], "recipeText": "Syta grochówka z wędzonką." },
+
+  {
+    "name": "Gołąbki",
+    "tags": ["mięsne", "kuchnia polska", "comfort"],
+    "recipeText": "Kapusta faszerowana mięsem i ryżem."
+  },
+  { "name": "Bitki wołowe", "tags": ["mięsne", "weekendowe", "klasyczne"], "recipeText": "Duszona wołowina w sosie." },
+  {
+    "name": "Gulasz wieprzowy",
+    "tags": ["mięsne", "jednogarnkowe", "kuchnia polska"],
+    "recipeText": "Gulasz z łopatki wieprzowej."
   },
   {
-    "name": "Gnocchi w sosie pomidorowym",
-    "tags": ["makaron", "vege"],
-    "recipeText": "Miękkie kluski ziemniaczane w sosie."
+    "name": "Kluski śląskie z sosem",
+    "tags": ["mączne", "kuchnia polska", "comfort"],
+    "recipeText": "Miękkie kluski ziemniaczane."
+  },
+  { "name": "Kapuśniak", "tags": ["zupa", "wege", "kuchnia polska"], "recipeText": "Zupa z kiszonej kapusty." },
+  {
+    "name": "Fasolka po bretońsku",
+    "tags": ["mięsne", "jednogarnkowe", "comfort"],
+    "recipeText": "Fasola w sosie pomidorowym z kiełbasą."
+  },
+  { "name": "Pyzy", "tags": ["mączne", "kuchnia polska", "comfort"], "recipeText": "Ziemniaczane kluski." },
+  { "name": "Kopytka", "tags": ["mączne", "wege", "kuchnia polska"], "recipeText": "Kluski z ziemniaków i mąki." },
+  {
+    "name": "Schab w sosie własnym",
+    "tags": ["mięsne", "klasyczne", "pieczone"],
+    "recipeText": "Schab duszony w sosie."
+  },
+
+  {
+    "name": "Spaghetti bolognese",
+    "tags": ["makaron", "mięsne", "kuchnia włoska"],
+    "recipeText": "Makaron z sosem mięsnym."
+  },
+  {
+    "name": "Spaghetti carbonara",
+    "tags": ["makaron", "mięsne", "kuchnia włoska"],
+    "recipeText": "Makaron z jajkiem i boczkiem."
+  },
+  {
+    "name": "Spaghetti z kiełbasą",
+    "tags": ["makaron", "mięsne", "szybkie"],
+    "recipeText": "Makaron w sosie z kiełbasą."
+  },
+  {
+    "name": "Makaron z twarogiem",
+    "tags": ["makaron", "wege", "na słodko"],
+    "recipeText": "Makaron z twarogiem i cukrem."
+  },
+  {
+    "name": "Lasagne domowa",
+    "tags": ["makaron", "mięsne", "weekendowe"],
+    "recipeText": "Warstwowa zapiekanka makaronowa."
+  },
+  {
+    "name": "Lasagne z Biedronki",
+    "tags": ["makaron", "mrożonki", "szybkie"],
+    "recipeText": "Gotowa lasagne do podgrzania."
+  },
+  { "name": "Makaron z pesto", "tags": ["makaron", "wege", "szybkie"], "recipeText": "Makaron z bazyliowym pesto." },
+  {
+    "name": "Makaron z kurczakiem i brokułem",
+    "tags": ["makaron", "kurczak", "fit"],
+    "recipeText": "Makaron z kurczakiem i warzywami."
+  },
+  {
+    "name": "Penne w sosie śmietanowo serowym",
+    "tags": ["makaron", "wege", "comfort"],
+    "recipeText": "Makaron w kremowym sosie."
+  },
+  { "name": "Makaron z łososiem", "tags": ["makaron", "ryba", "fit"], "recipeText": "Makaron z łososiem i śmietaną." },
+  {
+    "name": "Spaghetti aglio e olio",
+    "tags": ["makaron", "wege", "szybkie"],
+    "recipeText": "Makaron z oliwą i czosnkiem."
+  },
+  { "name": "Makaron zapiekany", "tags": ["makaron", "pieczone", "comfort"], "recipeText": "Zapiekanka makaronowa." },
+
+  {
+    "name": "Warzywa na patelni z kurczakiem",
+    "tags": ["kurczak", "szybkie", "fit"],
+    "recipeText": "Kurczak smażony z warzywami."
+  },
+  {
+    "name": "Kurczak w sosie słodko kwaśnym z ryżem",
+    "tags": ["kurczak", "ryż", "kuchnia azjatycka"],
+    "recipeText": "Kurczak w sosie sweet and sour."
+  },
+  {
+    "name": "Klopsiki szwedzkie",
+    "tags": ["mięsne", "comfort", "weekendowe"],
+    "recipeText": "Pulpeciki w kremowym sosie."
+  },
+  { "name": "Leczo", "tags": ["jednogarnkowe", "mięsne", "kuchnia polska"], "recipeText": "Warzywa z kiełbasą." },
+  {
+    "name": "Kurczak curry z ryżem",
+    "tags": ["kurczak", "ryż", "kuchnia azjatycka"],
+    "recipeText": "Kurczak w sosie curry."
+  },
+  {
+    "name": "Kurczak teriyaki",
+    "tags": ["kurczak", "szybkie", "kuchnia azjatycka"],
+    "recipeText": "Kurczak w sosie teriyaki."
+  },
+  {
+    "name": "Kurczak pieczony z ziemniakami",
+    "tags": ["kurczak", "pieczone", "ziemniaki"],
+    "recipeText": "Kurczak pieczony w piekarniku."
+  },
+  {
+    "name": "Pulpeciki w sosie pomidorowym",
+    "tags": ["mięsne", "jednogarnkowe", "comfort"],
+    "recipeText": "Pulpeciki w sosie pomidorowym."
+  },
+  {
+    "name": "Stir fry wołowy",
+    "tags": ["mięsne", "szybkie", "kuchnia azjatycka"],
+    "recipeText": "Wołowina smażona z warzywami."
+  },
+  {
+    "name": "Chili con carne",
+    "tags": ["mięsne", "jednogarnkowe", "kuchnia meksykańska"],
+    "recipeText": "Gulasz z mięsa i fasoli."
+  },
+
+  {
+    "name": "Enchilada",
+    "tags": ["mięsne", "pieczone", "kuchnia meksykańska"],
+    "recipeText": "Zapiekane tortille z nadzieniem."
+  },
+  { "name": "Pizza mrożona", "tags": ["mrożonki", "szybkie", "comfort"], "recipeText": "Gotowa pizza z piekarnika." },
+  {
+    "name": "Pizza domowa",
+    "tags": ["pieczone", "kuchnia włoska", "weekendowe"],
+    "recipeText": "Pizza robiona w domu."
+  },
+  {
+    "name": "Quesadilla",
+    "tags": ["mięsne", "szybkie", "kuchnia meksykańska"],
+    "recipeText": "Tortilla z serem i mięsem."
+  },
+  { "name": "Tacos", "tags": ["mięsne", "street food", "kuchnia meksykańska"], "recipeText": "Tortille z nadzieniem." },
+  {
+    "name": "Tortilla wrap",
+    "tags": ["mięsne", "szybkie", "street food"],
+    "recipeText": "Zwijana tortilla z dodatkami."
+  },
+  { "name": "Kebab domowy", "tags": ["mięsne", "street food", "comfort"], "recipeText": "Domowa wersja kebaba." },
+  {
+    "name": "Pad thai",
+    "tags": ["makaron", "szybkie", "kuchnia azjatycka"],
+    "recipeText": "Makaron smażony po tajsku."
+  },
+  { "name": "Fried rice", "tags": ["ryż", "szybkie", "kuchnia azjatycka"], "recipeText": "Smażony ryż z dodatkami." },
+
+  { "name": "Naleśniki z serem", "tags": ["mączne", "wege", "na słodko"], "recipeText": "Naleśniki z twarogiem." },
+  {
+    "name": "Naleśniki z kurczakiem",
+    "tags": ["mączne", "kurczak", "comfort"],
+    "recipeText": "Wytrawne naleśniki z kurczakiem."
+  },
+  { "name": "Naleśniki z parówką", "tags": ["mączne", "mięsne", "comfort"], "recipeText": "Naleśniki z parówką." },
+  {
+    "name": "Racuchy z jabłkami",
+    "tags": ["mączne", "wege", "na słodko"],
+    "recipeText": "Placuszki drożdżowe z jabłkami."
+  },
+  { "name": "Omlet", "tags": ["szybkie", "wege", "fit"], "recipeText": "Omlet na słodko lub słono." },
+  { "name": "Tosty francuskie", "tags": ["mączne", "szybkie", "comfort"], "recipeText": "Chleb smażony w jajku." },
+  {
+    "name": "Zapiekanki z pieczarkami",
+    "tags": ["mączne", "wege", "street food"],
+    "recipeText": "Bagietki z pieczarkami i serem."
+  },
+  { "name": "Grzanki z serem", "tags": ["mączne", "wege", "szybkie"], "recipeText": "Chrupiące grzanki z serem." },
+
+  { "name": "Paluszki rybne", "tags": ["ryba", "mrożonki", "szybkie"], "recipeText": "Panierowane paluszki rybne." },
+  {
+    "name": "Ryba z pieca z frytkami",
+    "tags": ["ryba", "pieczone", "ziemniaki"],
+    "recipeText": "Pieczona ryba z frytkami."
+  },
+  { "name": "Łosoś z piekarnika", "tags": ["ryba", "pieczone", "fit"], "recipeText": "Łosoś pieczony z cytryną." },
+  { "name": "Dorsz panierowany", "tags": ["ryba", "smażone", "klasyczne"], "recipeText": "Dorsz w panierce." },
+  { "name": "Ryba po grecku", "tags": ["ryba", "kuchnia polska", "comfort"], "recipeText": "Ryba w sosie warzywnym." },
+  {
+    "name": "Fish and chips",
+    "tags": ["ryba", "smażone", "street food"],
+    "recipeText": "Ryba z frytkami po brytyjsku."
   }
 ]
