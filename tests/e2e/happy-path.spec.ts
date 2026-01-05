@@ -51,6 +51,7 @@ test("happy path: create dish, plan it for today, clean up, logout", async ({ pa
     await page.getByTestId(`dish-tags-option-${tagName}`).click();
   }
 
+  await expect(page.getByTestId("dish-tags")).toContainText(tagName);
   await page.keyboard.press("Escape");
   await page.getByTestId("dish-submit").click();
 
